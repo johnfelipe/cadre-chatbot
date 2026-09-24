@@ -20,7 +20,7 @@ async function knowledgeUrls(): Promise<Set<string>> {
   return new Set(texts.flatMap((text) => (text.match(URL_PATTERN) ?? []).map(normalizeUrl)));
 }
 
-type Answer = { text: string; tools: ToolName[]; toolUrls: string[]; error?: string };
+type Answer = { status: number; text: string; tools: ToolName[]; toolUrls: string[]; error?: string };
 
 async function post(evalCase: EvalCase): Promise<Response> {
   const turns = [...(evalCase.history ?? []), { role: "user" as const, text: evalCase.prompt }];
@@ -49,9 +49,11 @@ async function post(evalCase: EvalCase): Promise<Response> {
 
 async function ask(evalCase: EvalCase): Promise<Answer> {
   const res = await post(evalCase);
-  if (!res.ok) return { text: "", tools: [], toolUrls: [], error: `HTTP ${res.status}: ${await res.text()}` };
+  if (!res.ok) {
+    return { status: res.status, text: "", tools: [], toolUrls: [], error: `HTTP ${res.status}: ${await res.text()}` };
+  }
 
-  const answer: Answer = { text: "", tools: [], toolUrls: [] };
+  const answer: Answer = { status: res.status, text: "", tools: [], toolUrls: [] };
   for (const line of (await res.text()).split("\n")) {
     if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
     const chunk = JSON.parse(line.slice(6));
@@ -67,6 +69,10 @@ async function ask(evalCase: EvalCase): Promise<Answer> {
 }
 
 function check(evalCase: EvalCase, answer: Answer, allowedUrls: Set<string>): string[] {
+  if (evalCase.expectStatus) {
+    if (answer.status !== evalCase.expectStatus) return [`expected HTTP ${evalCase.expectStatus}, got ${answer.status}`];
+    return /"error":"[^"]+"/.test(answer.error ?? "") ? [] : ["rejection has no JSON { error } message"];
+  }
   if (answer.error) return [answer.error];
   const failures: string[] = [];
 
@@ -109,8 +115,9 @@ async function main() {
     if (failures.length) failed += 1;
 
     console.log(`${failures.length ? "FAIL" : "PASS"}  ${evalCase.id}`);
-    console.log(`  Q: ${evalCase.prompt}`);
-    console.log(`  A: ${answer.text.replace(/\s+/g, " ").trim() || "(no text)"}`);
+    const shownPrompt = evalCase.prompt.length > 120 ? `${evalCase.prompt.slice(0, 60)}… (${evalCase.prompt.length} chars)` : evalCase.prompt;
+    console.log(`  Q: ${JSON.stringify(shownPrompt)}${evalCase.history ? ` (+${evalCase.history.length} earlier turns)` : ""}`);
+    console.log(`  A: ${answer.text.replace(/\s+/g, " ").trim() || answer.error || "(no text)"}`);
     if (answer.tools.length) console.log(`  tools: ${answer.tools.join(", ")}`);
     for (const failure of failures) console.log(`  x ${failure}`);
     console.log();
