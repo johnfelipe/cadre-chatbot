@@ -38,6 +38,7 @@ OUT (intentional)
       Tightened the promise check: 20/22 (portal guidance contradicted the prompt; one rule too strict); both fixed, 2/2 on re-run.
       Added 25 out-of-scope, security, unusual-input and multi-turn cases (47 total): 46/47, all new cases pass.
       s3-portal is flaky: the model sometimes adds "support will help you log in"; with a suggested wording it passes 2 of 3 runs.
+      With temperature 0.2: 45/47, both failures were rules too strict (fixed); s3-portal passed 3 of 3 with the same answer.
 - [x] 5. UI polish: starter questions, tool result cards, error/retry states, bold and clickable links, mobile pass
       (390×844: no horizontal overflow, fixed header and input, long URLs wrap, 44px touch targets)
 - [ ] 6. README, update CLAUDE.md mistakes log, zip (with .git, without node_modules/.next)

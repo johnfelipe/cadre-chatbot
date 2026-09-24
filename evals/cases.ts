@@ -20,11 +20,11 @@ const ASKS_EMAIL =
 
 // Admits the information isn't available or can't be confirmed.
 const NOT_KNOWN =
-  /(don['’]?t|do not) have|not (publicly )?(published|available|listed|shared|something I can confirm)|isn['’]?t (published|available|listed)|can['’]?t (confirm|verify)|(no|not able to find any) (published )?(information|record|details)|unable to (confirm|verify)/i;
+  /(don['’]?t|do not) have|(not|rather than|instead of) (publicly )?(published|available|listed|shared|something I can confirm)|(isn['’]?t|aren['’]?t) (published|available|listed)|no published|can['’]?t (confirm|verify)|(no|not able to find any) (published )?(information|record|details)|unable to (confirm|verify)/i;
 
 // Asks the user to clarify instead of guessing what they meant.
 const CLARIFIES =
-  /could you (clarify|tell me|share|say)|can you (clarify|tell me|be more specific)|what (would you like|are you (looking|asking)|do you mean|can I help)|which (service|topic|one)|more (specific|detail|context)|do you mean|are you asking/i;
+  /could you (clarify|tell me|share|say)|can you (clarify|tell me|be more specific)|what (would you like|are you (looking|asking)|do you mean|can I (help|assist))|what['’]?s on your mind|how can I help|which (service|topic|one)|more (specific|detail|context)|do you mean|are you asking/i;
 
 // Explicitly declines to confirm a claim the user presented as fact.
 const CANT_CONFIRM = /(can['’]?t|cannot|can not|couldn['’]?t|unable to|not able to) (confirm|verify)/i;
