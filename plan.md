@@ -36,6 +36,8 @@ OUT (intentional)
       Added 5 knowledge-gap cases (price, headcount, client names, two false premises): 5/5 on production. 22 cases total.
       After the false-premise and no-promises rules: 21/22, then 22/22 in 105 s (runner retries on 429 instead of pausing).
       Tightened the promise check: 20/22 (portal guidance contradicted the prompt; one rule too strict); both fixed, 2/2 on re-run.
+      Added 25 out-of-scope, security, unusual-input and multi-turn cases (47 total): 46/47, all new cases pass.
+      s3-portal is flaky: the model sometimes adds "support will help you log in"; with a suggested wording it passes 2 of 3 runs.
 - [x] 5. UI polish: starter questions, tool result cards, error/retry states, bold and clickable links, mobile pass
       (390×844: no horizontal overflow, fixed header and input, long URLs wrap, 44px touch targets)
 - [ ] 6. README, update CLAUDE.md mistakes log, zip (with .git, without node_modules/.next)
