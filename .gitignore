@@ -16,6 +16,9 @@ next-env.d.ts
 # deploy
 .vercel/
 
+# personal Claude Code permissions
+.claude/settings.local.json
+
 # os / editor
 .DS_Store
 Thumbs.db
