@@ -39,6 +39,9 @@ OUT (intentional)
 - [x] 5. UI polish: starter questions, tool result cards, error/retry states, bold and clickable links, mobile pass
       (390×844: no horizontal overflow, fixed header and input, long URLs wrap, 44px touch targets)
 - [ ] 6. README, update CLAUDE.md mistakes log, zip (with .git, without node_modules/.next)
+      Before submitting (day 4, not the review day: reviewers test the live URL in between):
+      switch `OPENROUTER_API_KEY` in Vercel back to the challenge key, **redeploy** (env changes only apply to
+      new deployments), then smoke-test booking and escalation on the live URL.
 
 ## API and data model
 - `POST /api/chat`: body `{ messages: UIMessage[] }` as sent by `useChat` (extra fields such as `id` and `trigger` are ignored).
@@ -70,7 +73,9 @@ OUT (intentional)
 - System prompt (rules + knowledge): ~5k tokens after the cadreai.com research (was ~1.9k from the brief alone).
   With tool schemas and history, a turn is ~6k input + ≤600 output tokens. At Haiku 4.5 list prices ($1/M input,
   $5/M output) that is ≈ $0.009 per turn, so ~500 turns. Verify prices on OpenRouter before relying on this.
-- Spent so far (2026-09-24): 6 full eval runs + 4 partial runs + 2 manual checks ≈ 128 turns ≈ $1.15 at the estimate above.
+- Spent on the challenge key (2026-09-24): 6 full eval runs + 4 partial runs + 2 manual checks ≈ 128 turns ≈ $1.15 at the estimate above.
+- From 2026-09-24 17:43 production runs on a personal OpenRouter key so testing doesn't eat the challenge budget;
+  later eval runs are not counted above. The challenge key goes back before submission (see phase 6).
 - A full eval run is 22 turns (≈ $0.20). Evals, manual checks and reviewer traffic all share the budget.
 - Guards: per-IP rate limit (10/min), 2000-char message cap, 12-message history window, 600-token output cap, 3 steps max.
 - No automated test calls the model. Only `npm run eval` and manual checks spend budget.
