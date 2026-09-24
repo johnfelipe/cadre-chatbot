@@ -34,7 +34,7 @@ and escalate anything we can't answer. It is NOT a general-purpose assistant.
 - Knowledge in prompt, not RAG: corpus is < 10k tokens. Don't add a vector DB. Revisit if > 50k tokens.
 - Every API input is validated with zod or explicit checks; errors return JSON `{ error }` with proper status.
 - Don't add dependencies without asking. Don't touch `.env*`.
-- Small commits, conventional prefixes: feat:, fix:, chore:, docs:, test:, refactor:.
+- Small commits, conventional prefixes: feat:, fix:, chore:, docs:, test:, refactor:. Write the title and body in English.
 - Before saying a task is done: `npm run build && npm run lint`. If prompt/knowledge changed: `npm run eval`.
 - Prefer editing existing files over creating new ones. No barrel files. No classes where functions suffice.
 
