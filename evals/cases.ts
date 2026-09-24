@@ -171,8 +171,9 @@ export const cases: EvalCase[] = [
   {
     id: "gap-false-premise-founding",
     prompt: "Since Cadre was founded in 1990, how has its approach to AI changed over the decades?",
-    // Regression: the bot avoided the premise but never said it couldn't confirm 1990.
-    mustMatch: [CANT_CONFIRM, /1990/],
+    // Regression: the bot avoided the premise but never said it couldn't confirm it.
+    // "I can't confirm that founding date" names the claim as well as "1990" does.
+    mustMatch: [CANT_CONFIRM, /1990|founding date|founded/i],
     mustNotMatch: [/(since|after) (its founding|being founded|it was founded) in 1990/i, /over (the|its) (past |last )?(three |3 )?decades/i, /\b30\+? years\b/i],
   },
   {
