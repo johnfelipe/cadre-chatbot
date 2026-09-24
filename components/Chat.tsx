@@ -49,7 +49,7 @@ export default function Chat({ maxMessageChars }: { maxMessageChars: number }) {
                   key={question}
                   type="button"
                   onClick={() => send(question)}
-                  className="rounded-full border border-neutral-300 px-3 py-1.5 text-left text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
+                  className="min-h-11 rounded-full border border-neutral-300 px-3 py-1.5 text-left text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
                 >
                   {question}
                 </button>
@@ -82,17 +82,17 @@ export default function Chat({ maxMessageChars }: { maxMessageChars: number }) {
           maxLength={maxMessageChars}
           placeholder="Type your question…"
           aria-label="Message"
-          className="min-w-0 flex-1 rounded-lg border border-neutral-300 bg-transparent px-3 py-2 outline-none focus:border-neutral-500 dark:border-neutral-700"
+          className="h-11 min-w-0 flex-1 rounded-lg border border-neutral-300 bg-transparent px-3 outline-none focus:border-neutral-500 dark:border-neutral-700"
         />
         {busy ? (
-          <button type="button" onClick={() => stop()} className="rounded-lg border border-neutral-300 px-4 py-2 dark:border-neutral-700">
+          <button type="button" onClick={() => stop()} className="h-11 rounded-lg border border-neutral-300 px-4 dark:border-neutral-700">
             Stop
           </button>
         ) : (
           <button
             type="submit"
             disabled={!input.trim()}
-            className="rounded-lg bg-neutral-900 px-4 py-2 text-white disabled:opacity-40 dark:bg-white dark:text-neutral-900"
+            className="h-11 rounded-lg bg-neutral-900 px-4 text-white disabled:opacity-40 dark:bg-white dark:text-neutral-900"
           >
             Send
           </button>

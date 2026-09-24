@@ -33,7 +33,8 @@ OUT (intentional)
 - [x] 3. System prompt + tools (booking, escalation) + input validation + rate limit + `max_tokens` and history caps
 - [x] 4. Evals: 17 cases against production. Run 1: 15/17 (one bot bug, one runner bug, one rule too strict).
       Run 2: 15/17 (Markdown bold in list labels). After the fixes, the 2 failing cases pass; see the mistakes log.
-- [ ] 5. UI polish: starter questions, tool result cards, error/retry states, bold and clickable links done; mobile pass pending
+- [x] 5. UI polish: starter questions, tool result cards, error/retry states, bold and clickable links, mobile pass
+      (390×844: no horizontal overflow, fixed header and input, long URLs wrap, 44px touch targets)
 - [ ] 6. README, update CLAUDE.md mistakes log, zip (with .git, without node_modules/.next)
 
 ## API and data model
