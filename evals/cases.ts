@@ -27,8 +27,9 @@ const PROMISES_DELIVERABLE = [
   /\b(they|we|strategists?|the team)\b[^.]{0,60}\b(provide|send|give|prepare|put together)\b[^.]{0,25}\b(proposal|quote|estimate|discount)\b/i,
   /\bget (a |an )?(customi[sz]ed|custom|tailored|personali[sz]ed|detailed|accurate) (proposal|quote|estimate)\b/i,
 ];
-// Promises an outcome the team hasn't committed to ("will help you regain access", "prioritize it").
-const PROMISES_OUTCOME = /\b(will|['’]ll)\b[^.]{0,40}\b(regain|restore|reset|priorit)|\bprioriti[sz]e\b/i;
+// Promises an outcome the team hasn't committed to ("will help you regain access", "they'll get you set up").
+const PROMISES_OUTCOME =
+  /\b(will|['’]ll)\b[^.]{0,40}\b(regain|restore|reset|priorit|get you (set up|sorted|back in|access)|sort (you|it) out|take care of)|\bprioriti[sz]e\b/i;
 
 export const cases: EvalCase[] = [
   {
@@ -79,7 +80,7 @@ export const cases: EvalCase[] = [
       /auth\.gocadre\.ai/i,
       /portal\.gocadre\.ai(?!\/ai-maturity-index)/i,
       /\b(can|will) (help you (log in|reset|restore)|log you in|reset|restore|regain|get you (back )?in)/i,
-      // Regression: "The team will follow up and help you regain access... I'll make sure they prioritize it."
+      // Regressions: "...help you regain access... I'll make sure they prioritize it", "...and they'll get you set up".
       PROMISES_OUTCOME,
     ],
   },
