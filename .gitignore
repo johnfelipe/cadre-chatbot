@@ -1,6 +1,7 @@
 # secrets
 .env*
 !.env.example
+*.pem
 
 # deps & build
 node_modules/

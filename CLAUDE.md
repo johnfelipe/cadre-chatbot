@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+@AGENTS.md
+
 # Cadre AI Support Chatbot
 
 Customer-facing support chatbot for Cadre AI (AI strategy & implementation consultancy).
@@ -42,6 +44,7 @@ code quality and verification 15%, communication 10%. "3 working features > 8 br
 - `npm run dev` — local dev on :3000
 - `npm run build` — must pass before any commit that touches app/ or lib/
 - `npm run lint` — eslint
+- `npm run typecheck` — `next typegen` (route types like `LayoutProps`) + `tsc --noEmit`
 - `npm run eval` — runs evals/run.ts against the real model (needs OPENROUTER_API_KEY; spends budget, run deliberately)
 
 ## Architecture (read before editing)
