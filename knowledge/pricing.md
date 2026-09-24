@@ -1,9 +1,11 @@
 # Pricing
 
-Source: Cadre AI take-home brief v1.1 (seed).
+Source: Cadre AI take-home brief v1.1 (seed); https://portal.gocadre.ai/ai-maturity-index (fetched 2026-09-24).
+No pricing page was found on https://cadreai.com.
 
 ## Facts
 - Service pricing is a common inquiry.
+- The AI Maturity Index assessment is free. (source: https://portal.gocadre.ai/ai-maturity-index)
 
 ## Not published
 - [NOT PUBLISHED] Prices, rates, packages, and minimum engagement sizes for every service.
