@@ -66,6 +66,7 @@ OUT (intentional)
 |---|---|---|
 | OpenRouter as the only LLM transport | Required by the brief; one key, model swappable via `OPENROUTER_MODEL` | — |
 | Haiku 4.5 over Sonnet | Support Q&A over small corpus; latency and cost dominate | Evals show reasoning failures |
+| Temperature 0.2 (default was the model's 1.0) | Support answers should be consistent; at 1.0 s3-portal passed only 2 of 3 runs | Answers read robotic or repetitive |
 | Full knowledge in system prompt | < 10k tokens; no retrieval misses; prompt caching can make it cheaper | Corpus > ~50k tokens |
 | Tools return URLs from config | Model can't hallucinate links | — |
 | In-memory rate limit | Zero infra for MVP | Real traffic → Upstash Redis |

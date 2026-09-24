@@ -69,6 +69,7 @@ export async function POST(req: Request) {
     messages: await convertToModelMessages(messages, { tools }),
     tools,
     maxOutputTokens: CONFIG.limits.maxOutputTokens,
+    temperature: CONFIG.temperature,
     stopWhen: isStepCount(CONFIG.limits.maxSteps),
     onError: ({ error }) => console.error("[chat] stream error", error),
   });

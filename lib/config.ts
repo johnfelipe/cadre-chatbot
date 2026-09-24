@@ -1,5 +1,7 @@
 export const CONFIG = {
   model: process.env.OPENROUTER_MODEL || "anthropic/claude-haiku-4.5",
+  // Low but not zero: support answers should be consistent across runs, not word-for-word identical.
+  temperature: 0.2,
   limits: {
     maxOutputTokens: 600,
     maxHistoryMessages: 12,
