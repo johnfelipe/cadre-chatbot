@@ -9,18 +9,27 @@ Audience: prospective clients (PE-backed, professional services, financial servi
 Goal: answer common inbound questions accurately, route high-intent users to a strategist call,
 and escalate anything we can't answer. It is NOT a general-purpose assistant.
 
-Built as a take-home challenge; the brief is `../Cadre_AI_Chatbot_Take_Home_Candidate_v1.1.pdf` (outside the repo).
+Built as a take-home challenge (Staff AI Engineer, Colombia). The brief is `../Cadre_AI_Chatbot_Take_Home_Candidate_v1.1.pdf`
+and the recruiter emails are the `.txt` files next to it, all outside the repo.
 `plan.md` is the source of truth for phases and scope. When scope changes, update it in the same commit.
 
-## Hard constraints (from the brief)
-- LLM access is through **OpenRouter only**, with the challenge key in `OPENROUTER_API_KEY`.
-  Never commit it, never send it to the browser: every model call goes through a server route.
-- The key has a **$5 budget** and expires 7 days after it was issued (around 2026-09-24).
-  Cap `max_tokens`, cap history length and message size, and rate-limit `/api/chat`: the URL is public.
-- The key is for the bot's runtime only. No coding help or bulk experiments with it. Automated tests mock the LLM.
+## Timeline
+- Challenge received 2026-09-24. 3 days of work, project due on day 4, 1-hour live review with an AI engineer on day 5.
+- Review agenda: live demo of the deployed app, architecture (system prompt, API, data model, scaling),
+  Claude Code workflow (CLAUDE.md, plan.md, subagents, how AI errors were handled), code deep dive
+  (what Claude generated vs what was changed, and why), and decisions/trade-offs (what was left out, what's next).
+
+## Hard constraints (from the brief and the recruiter email)
+- LLM access is through **OpenRouter only**, with the challenge key in `OPENROUTER_API_KEY`. Any OpenRouter model is allowed.
+  Never commit it, never paste it into any repo file, never send it to the browser: every model call goes through a server route.
+- The key has a **$5 budget** and expires 7 days after it was issued, around **2026-10-01**. That is after the day-5 review,
+  so the deployed bot must keep working until then. Cap `max_tokens`, cap history length and message size,
+  and rate-limit `/api/chat`: the URL is public.
+- The key is for the bot's runtime only. No coding help or bulk experiments with it. No automated test calls the model.
 - The app must be live on a public URL. Deploy early, redeploy after every phase.
 - Submission is a zip of the repo with `.git`, without `node_modules`, `.next`, `dist` or `build`. Keep it to a few MB.
-- `CLAUDE.md` and `plan.md` must stay at the repo root. Reviewers read the commit history.
+- `CLAUDE.md` and `plan.md` must stay at the repo root (the brief spells it `plan.md`; the email writes `PLAN.md`).
+  Reviewers read the commit history.
 
 ## Acceptance scenarios (all must pass on the deployed URL)
 1. What Cadre AI does, and whether it works with the user's industry.
@@ -45,16 +54,26 @@ code quality and verification 15%, communication 10%. "3 working features > 8 br
 - `npm run build` — must pass before any commit that touches app/ or lib/
 - `npm run lint` — eslint
 - `npm run typecheck` — `next typegen` (route types like `LayoutProps`) + `tsc --noEmit`
-- `npm run eval` — runs evals/run.ts against the real model (needs OPENROUTER_API_KEY; spends budget, run deliberately)
+- `npm run eval [-- <case-id-prefix> ...]` — posts evals/cases.ts to a running `/api/chat` (`EVAL_URL`, default
+  localhost:3000, whose server needs `OPENROUTER_API_KEY`). Real model calls: spends budget, run deliberately.
+
+## Env vars (`.env.local` locally, Vercel project settings in prod)
+- `OPENROUTER_API_KEY` (required), `OPENROUTER_MODEL` (optional, defaults to `anthropic/claude-haiku-4.5`).
+- `BOOKING_URL` (optional): real booking link. Unset → `get_booking_link` falls back to the website.
+- `ESCALATION_WEBHOOK_URL` (optional): receives each escalation as JSON. Unset → escalations are only logged.
 
 ## Architecture (read before editing)
 - `knowledge/*.md` — the ONLY source of truth about Cadre. Facts live here, never in code.
 - `lib/knowledge.ts` — loads + caches all knowledge files into one string.
 - `lib/prompt.ts` — builds the system prompt (behavior rules + injected knowledge). Behavior only, no facts.
-- `lib/tools.ts` — `get_booking_link`, `escalate_to_human`. Tool outputs come from `lib/config.ts`.
-- `lib/config.ts` — every external URL. The model must never invent URLs; it gets them from tools/knowledge.
-- `app/api/chat/route.ts` — single endpoint: validate → rate limit → trim history → streamText (OpenRouter, `max_tokens` capped) → stream response.
+- `lib/tools.ts` — `get_booking_link`, `escalate_to_human`, and the `ChatMessage` type the UI uses. Tool outputs come from `lib/config.ts`.
+- `lib/escalations.ts` — escalation zod schema, `Escalation` record, log + optional webhook.
+- `lib/rate-limit.ts` — fixed-window limit per IP, in memory (per serverless instance).
+- `lib/config.ts` — model, limits and every external URL. The model must never invent URLs; it gets them from tools/knowledge.
+- `app/api/chat/route.ts` — single endpoint: key check → rate limit → validate → trim history → length cap → streamText (OpenRouter, `maxOutputTokens` capped) → UI message stream.
+- `components/Chat.tsx` — `useChat` client; renders text parts and tool parts (booking card, escalation notice).
 - `evals/` — behavioral regression tests. Add a case for every bug found in the bot's answers.
+- `.claude/` — permissions, subagents (`knowledge-writer`, `code-reviewer`, `eval-runner`) and slash commands.
 
 ## Rules
 - NEVER add facts about Cadre (pricing, clients, certifications, URLs) that aren't in `knowledge/`.
@@ -66,13 +85,22 @@ code quality and verification 15%, communication 10%. "3 working features > 8 br
 - Before saying a task is done: `npm run build && npm run lint`. If prompt/knowledge changed: `npm run eval`.
 - Prefer editing existing files over creating new ones. No barrel files. No classes where functions suffice.
 
-## AI SDK gotchas (verified in this repo)
-- Tools use `inputSchema` (not `parameters`) in AI SDK v5+. Check installed version before copying examples.
-- Multi-step tool use requires `stopWhen: stepCountIs(n)`; without it the model stops after the tool call.
+## AI SDK gotchas (verified in this repo: ai 7, @ai-sdk/react 4, zod 4, Next 16)
+- Docs for the installed versions ship in `node_modules/ai/docs/` and `node_modules/next/dist/docs/`. Read them before
+  copying examples from memory: most examples online are v4/v5.
+- v7 names: `instructions` (not `system`), `inputSchema` (not `parameters`), `maxOutputTokens` (not `maxTokens`),
+  `isStepCount` (`stepCountIs` is a deprecated alias), `await convertToModelMessages(...)` (async),
+  `createUIMessageStreamResponse({ stream: toUIMessageStream({ stream: result.stream }) })`.
+- `useChat` has no `input`/`handleSubmit`: keep input in state, call `sendMessage({ text })`. `DefaultChatTransport` is imported from `ai`.
+- Multi-step tool use requires `stopWhen: isStepCount(n)`; the default is 1 step, so the model stops after the tool call.
 - `knowledge/` is read with fs → must be listed in `outputFileTracingIncludes` in next.config.ts
   or it's missing on Vercel.
 - Anthropic models require the first message to be from the user, also through OpenRouter:
   after trimming history, drop leading non-user messages.
 
 ## Claude mistakes log (update as they happen)
-- <!-- e.g. "Invented a /pricing URL in knowledge/booking.md — caught in review, removed." -->
+- Rewrote the docs around `@ai-sdk/anthropic` + `ANTHROPIC_API_KEY`, which breaks the OpenRouter-only rule. Caught in review, fixed in 756b151.
+- Gave each core service a one-line description the brief doesn't contain (knowledge/services.md). Caught before commit; now names only.
+- The first gotchas in this file were AI SDK v5 (`stepCountIs`, `system`), but npm installed v7. A subagent read the bundled v7 docs before the route was written, and the gotchas were rewritten.
+- `npm run typecheck` failed on `LayoutProps` because Next 16 generates route types; the script now runs `next typegen` first.
+- Assumed a ~10k-token system prompt when estimating budget; measured ~1.9k. plan.md budget updated.
