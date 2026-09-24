@@ -109,3 +109,6 @@ code quality and verification 15%, communication 10%. "3 working features > 8 br
 - The prompt forbade Markdown but the model kept **bold** labels. Fixed in the UI (renders bold) instead of fighting the model.
 - Two eval false failures: a URL regex that swallowed "**", and a SOC 2 rule that rejected "SOC 2 isn't published". Rules now target claims, not mentions.
 - `vercel link` appended `.vercel` and `.env*` to .gitignore; the trailing `.env*` would have re-ignored `.env.example`. Reverted.
+- The first "asks for the user's email" eval regex also matched the bot giving out Cadre's own address ("email hello@…"),
+  and the access-promise guard missed the bot's real wording. Caught by the code-reviewer subagent; eval regexes are now
+  tested in node against the real answer and near-misses before committing.

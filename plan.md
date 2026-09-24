@@ -67,7 +67,7 @@ OUT (intentional)
 - System prompt (rules + knowledge): ~5k tokens after the cadreai.com research (was ~1.9k from the brief alone).
   With tool schemas and history, a turn is ~6k input + ≤600 output tokens. At Haiku 4.5 list prices ($1/M input,
   $5/M output) that is ≈ $0.009 per turn, so ~500 turns. Verify prices on OpenRouter before relying on this.
-- Spent so far (2026-09-24): 2 full eval runs + 2 re-runs + 1 manual check ≈ 37 turns ≈ $0.35 at the estimate above.
+- Spent so far (2026-09-24): 3 full eval runs + 2 re-runs + 1 manual check ≈ 54 turns ≈ $0.50 at the estimate above.
 - A full eval run is 17 turns (≈ $0.10). Evals, manual checks and reviewer traffic all share the budget.
 - Guards: per-IP rate limit (10/min), 2000-char message cap, 12-message history window, 600-token output cap, 3 steps max.
 - No automated test calls the model. Only `npm run eval` and manual checks spend budget.
