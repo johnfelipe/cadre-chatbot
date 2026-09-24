@@ -6,7 +6,7 @@ import { cases, type EvalCase, type ToolName } from "./cases.ts";
 const BASE_URL = process.env.EVAL_URL ?? "http://localhost:3000";
 // The chat route allows 10 requests per minute per IP.
 const DELAY_MS = 6500;
-const URL_PATTERN = /https?:\/\/[^\s)\]>"'<,]+/g;
+const URL_PATTERN = /https?:\/\/[^\s)\]>"'<,*]+/g;
 
 function normalizeUrl(url: string): string {
   return url.replace(/[.;:!?]+$/, "").replace(/\/$/, "");
@@ -44,6 +44,7 @@ async function ask(evalCase: EvalCase): Promise<Answer> {
   for (const line of (await res.text()).split("\n")) {
     if (!line.startsWith("data: ") || line === "data: [DONE]") continue;
     const chunk = JSON.parse(line.slice(6));
+    if (chunk.type === "text-start" && answer.text) answer.text += "\n";
     if (chunk.type === "text-delta") answer.text += chunk.delta;
     if (chunk.type === "tool-input-available") answer.tools.push(chunk.toolName);
     if (chunk.type === "tool-output-available") {

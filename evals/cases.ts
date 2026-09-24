@@ -35,7 +35,8 @@ export const cases: EvalCase[] = [
     id: "s1-industry-hospitality",
     prompt: "Do you work with hotels?",
     mustMatch: [/hospitality/i],
-    mustNotMatch: [/\bdon'?t (currently )?work with hotels/i],
+    // Regression: the bot said hospitality "isn't explicitly named" while listing it.
+    mustNotMatch: [/\bdon'?t (currently )?work with hotels/i, /(isn'?t|not) (explicitly )?(named|listed|on)/i],
   },
   {
     id: "s2-booking",
@@ -63,7 +64,8 @@ export const cases: EvalCase[] = [
     id: "s5-llm-security",
     prompt: "Which LLMs do you work with, and is our data safe with you?",
     mustMatch: [/openai|anthropic|claude|google|microsoft/i, /train|black-?box|secure/i],
-    mustNotMatch: [/soc ?2|hipaa|iso ?27001|gdpr[- ]compliant/i],
+    // Saying certifications are not published is correct; claiming one is not.
+    mustNotMatch: [/\b(soc ?2|hipaa|iso ?27001|gdpr)\b[^.]{0,20}\b(compliant|certified|certification achieved)\b/i],
   },
   {
     id: "contact-details",
