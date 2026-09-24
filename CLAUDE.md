@@ -7,17 +7,42 @@ Audience: prospective clients (PE-backed, professional services, financial servi
 Goal: answer common inbound questions accurately, route high-intent users to a strategist call,
 and escalate anything we can't answer. It is NOT a general-purpose assistant.
 
+Built as a take-home challenge; the brief is `../Cadre_AI_Chatbot_Take_Home_Candidate_v1.1.pdf` (outside the repo).
+`plan.md` is the source of truth for phases and scope. When scope changes, update it in the same commit.
+
+## Hard constraints (from the brief)
+- LLM access is through **OpenRouter only**, with the challenge key in `OPENROUTER_API_KEY`.
+  Never commit it, never send it to the browser: every model call goes through a server route.
+- The key has a **$5 budget** and expires 7 days after it was issued (around 2026-09-24).
+  Cap `max_tokens`, cap history length and message size, and rate-limit `/api/chat`: the URL is public.
+- The key is for the bot's runtime only. No coding help or bulk experiments with it. Automated tests mock the LLM.
+- The app must be live on a public URL. Deploy early, redeploy after every phase.
+- Submission is a zip of the repo with `.git`, without `node_modules`, `.next`, `dist` or `build`. Keep it to a few MB.
+- `CLAUDE.md` and `plan.md` must stay at the repo root. Reviewers read the commit history.
+
+## Acceptance scenarios (all must pass on the deployed URL)
+1. What Cadre AI does, and whether it works with the user's industry.
+2. How to book a call with an AI strategist.
+3. How a client accesses the Cadre portal to track their AI tools, agents and results.
+4. What the AI Maturity Index is and how to get scored.
+5. Cadre's approach to LLM selection and data security.
+6. A question the bot can't answer: it escalates or redirects to a human instead of guessing.
+
+Evaluation weights: Claude Code workflow 30%, system design 25%, speed and scope 20%,
+code quality and verification 15%, communication 10%. "3 working features > 8 broken ones."
+
 ## Stack
 - Next.js (App Router) + TypeScript (strict), deployed on Vercel
-- Vercel AI SDK (`ai`, `@ai-sdk/anthropic`, `@ai-sdk/react`) — streaming + tool calling
-- Model: Claude Haiku 4.5 (`CHAT_MODEL` env var overrides). Chosen for latency/cost on a support workload.
+- Vercel AI SDK (`ai`, `@openrouter/ai-sdk-provider`, `@ai-sdk/react`) — streaming + tool calling
+- Model: Claude Haiku 4.5 through OpenRouter (`anthropic/claude-haiku-4.5`; `OPENROUTER_MODEL` env var overrides).
+  Chosen for latency/cost on a support workload.
 - zod for all input validation. Tailwind for UI. No database in MVP.
 
 ## Commands
 - `npm run dev` — local dev on :3000
 - `npm run build` — must pass before any commit that touches app/ or lib/
 - `npm run lint` — eslint
-- `npm run eval` — runs evals/run.ts against the real model (needs ANTHROPIC_API_KEY)
+- `npm run eval` — runs evals/run.ts against the real model (needs OPENROUTER_API_KEY; spends budget, run deliberately)
 
 ## Architecture (read before editing)
 - `knowledge/*.md` — the ONLY source of truth about Cadre. Facts live here, never in code.
@@ -25,7 +50,7 @@ and escalate anything we can't answer. It is NOT a general-purpose assistant.
 - `lib/prompt.ts` — builds the system prompt (behavior rules + injected knowledge). Behavior only, no facts.
 - `lib/tools.ts` — `get_booking_link`, `escalate_to_human`. Tool outputs come from `lib/config.ts`.
 - `lib/config.ts` — every external URL. The model must never invent URLs; it gets them from tools/knowledge.
-- `app/api/chat/route.ts` — single endpoint: validate → rate limit → streamText → stream response.
+- `app/api/chat/route.ts` — single endpoint: validate → rate limit → trim history → streamText (OpenRouter, `max_tokens` capped) → stream response.
 - `evals/` — behavioral regression tests. Add a case for every bug found in the bot's answers.
 
 ## Rules
@@ -43,7 +68,8 @@ and escalate anything we can't answer. It is NOT a general-purpose assistant.
 - Multi-step tool use requires `stopWhen: stepCountIs(n)`; without it the model stops after the tool call.
 - `knowledge/` is read with fs → must be listed in `outputFileTracingIncludes` in next.config.ts
   or it's missing on Vercel.
-- Anthropic requires the first message to be from the user: after trimming history, drop leading non-user messages.
+- Anthropic models require the first message to be from the user, also through OpenRouter:
+  after trimming history, drop leading non-user messages.
 
 ## Claude mistakes log (update as they happen)
 - <!-- e.g. "Invented a /pricing URL in knowledge/booking.md — caught in review, removed." -->

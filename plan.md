@@ -4,6 +4,8 @@
 A deployed chatbot a prospective or existing Cadre client could realistically use: accurate answers,
 clear routing to a strategist, graceful escalation. Time budget: ~5 hours.
 
+Done when the six acceptance scenarios in `CLAUDE.md` pass on the deployed URL.
+
 ## Scope
 IN
 - Company overview, services, industries served
@@ -25,7 +27,7 @@ OUT (intentional)
 - [ ] 0. CLAUDE.md, plan.md, .claude/ agents + commands  → commit
 - [ ] 1. Scaffold Next.js + minimal streaming chat + deploy to Vercel  → live URL
 - [ ] 2. Knowledge base (knowledge-writer subagent, in parallel with phase 3 UI work)
-- [ ] 3. System prompt + tools (booking, escalation) + input validation + rate limit
+- [ ] 3. System prompt + tools (booking, escalation) + input validation + rate limit + `max_tokens` and history caps
 - [ ] 4. Evals (15 cases incl. injection, pricing, off-topic) → fix failures
 - [ ] 5. UI polish: starter questions, tool result cards, error/retry states, mobile
 - [ ] 6. README, update CLAUDE.md mistakes log, zip (with .git, without node_modules/.next)
@@ -33,11 +35,19 @@ OUT (intentional)
 ## Decisions & trade-offs
 | Decision | Why | Revisit when |
 |---|---|---|
+| OpenRouter as the only LLM transport | Required by the brief; one key, model swappable via `OPENROUTER_MODEL` | — |
 | Haiku 4.5 over Sonnet | Support Q&A over small corpus; latency and cost dominate | Evals show reasoning failures |
-| Full knowledge in system prompt | < 10k tokens; no retrieval misses; prompt caching makes it cheap | Corpus > ~50k tokens |
+| Full knowledge in system prompt | < 10k tokens; no retrieval misses; prompt caching can make it cheaper | Corpus > ~50k tokens |
 | Tools return URLs from config | Model can't hallucinate links | — |
 | In-memory rate limit | Zero infra for MVP | Real traffic → Upstash Redis |
 | Escalation = log + webhook | Team gets notified without building a CRM | Volume justifies HubSpot/Salesforce integration |
+
+## Budget ($5 OpenRouter key)
+- Rough cost per turn with Haiku 4.5 ($1/M input, $5/M output): ~10k prompt tokens + ~500 output ≈ $0.0125,
+  so about 400 turns in total. Evals, manual checks and reviewer traffic all share that.
+- Guards: per-IP rate limit, message length cap, history window, `max_tokens` cap.
+- Unit tests mock the LLM. Only `npm run eval` and manual checks spend budget.
+- Check the balance in the OpenRouter dashboard before each eval run and before submitting.
 
 ## Known limitations
 - In-memory rate limit resets per serverless instance.
