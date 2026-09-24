@@ -72,8 +72,8 @@ function check(evalCase: EvalCase, answer: Answer, allowedUrls: Set<string>): st
     if (pattern.test(answer.text)) failures.push(`matched forbidden ${pattern}`);
   }
 
-  // The chat UI renders plain text, so Markdown shows up as literal asterisks.
-  if (/\*\*|^#{1,3} /m.test(answer.text)) failures.push("Markdown formatting in answer");
+  // The chat UI renders **bold**, links and line breaks only; headings and tables show up as raw Markdown.
+  if (/^#{1,3} |^\|.*\|$/m.test(answer.text)) failures.push("Markdown heading or table in answer");
 
   const toolUrls = answer.toolUrls.map(normalizeUrl);
   for (const url of (answer.text.match(URL_PATTERN) ?? []).map(normalizeUrl)) {

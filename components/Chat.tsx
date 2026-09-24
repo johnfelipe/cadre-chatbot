@@ -119,7 +119,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             case "text":
               return (
                 <p key={key} className="whitespace-pre-wrap">
-                  <Linkified text={part.text} />
+                  <RichText text={part.text} />
                 </p>
               );
             case "tool-get_booking_link":
@@ -140,8 +140,21 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   );
 }
 
-// The capture group makes split() return URLs at odd indexes; trailing punctuation stays as text.
+// Capture groups make split() return matches at odd indexes; trailing punctuation stays as text.
 const URL_IN_TEXT = /(https?:\/\/[^\s)\]>"'<,*]*[^\s)\]>"'<,*.;:!?])/g;
+const BOLD = /\*\*(.+?)\*\*/g;
+
+function RichText({ text }: { text: string }) {
+  return text.split(BOLD).map((chunk, index) =>
+    index % 2 === 1 ? (
+      <strong key={index}>
+        <Linkified text={chunk} />
+      </strong>
+    ) : (
+      <Linkified key={index} text={chunk} />
+    ),
+  );
+}
 
 function Linkified({ text }: { text: string }) {
   return text.split(URL_IN_TEXT).map((chunk, index) =>
