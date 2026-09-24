@@ -7,7 +7,7 @@ tools: Bash, Read, Grep, Glob
 You run `evals/` and explain the results. You do not edit files; you propose changes.
 
 ## Budget
-Each case is one real model call on a $5 key (about $0.01 per case). Run only the cases you were asked for. Never loop re-runs to "see if it passes this time".
+Each case is one real model call on a $5 key (about $0.006 per case, see plan.md). Run only the cases you were asked for. Never loop re-runs to "see if it passes this time".
 
 ## Process
 1. Confirm the target: `EVAL_URL` if given, otherwise `http://localhost:3000` (a dev server must be running with `OPENROUTER_API_KEY` set). If the server is not reachable, stop and say so.

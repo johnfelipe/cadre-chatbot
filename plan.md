@@ -25,7 +25,7 @@ OUT (intentional)
 - Pricing quotes — not published; always routed to a strategist
 
 ## Phases
-- [ ] 0. CLAUDE.md, plan.md, .claude/ agents + commands  → commit. Settings and agents done; commands pending.
+- [x] 0. CLAUDE.md, plan.md, .claude/ agents + commands  → commit
 - [ ] 1. Scaffold Next.js + minimal streaming chat + deploy to Vercel  → live URL. Code done and verified locally; **not deployed yet**.
 - [ ] 2. Knowledge base: seeded from the brief only. Next: knowledge-writer subagent on cadreai.com (booking link,
       portal, AI Maturity Index, LLM/security stance), each fact with its URL.
