@@ -13,11 +13,21 @@ const STARTER_QUESTIONS = [
   "How do you choose LLMs, and how do you handle data security?",
 ];
 
-export default function Chat({ maxMessageChars }: { maxMessageChars: number }) {
+type ChatProps = { maxMessageChars: number; maxHistoryMessages: number };
+
+export default function Chat({ maxMessageChars, maxHistoryMessages }: ChatProps) {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status, error, regenerate, stop } = useChat<ChatMessage>({
-    transport: new DefaultChatTransport({ api: "/api/chat" }),
-  });
+  // The server only uses the latest turns, so long conversations send just those and never hit the body cap.
+  const [transport] = useState(
+    () =>
+      new DefaultChatTransport<ChatMessage>({
+        api: "/api/chat",
+        prepareSendMessagesRequest: ({ id, messages }) => ({
+          body: { id, messages: messages.slice(-maxHistoryMessages) },
+        }),
+      }),
+  );
+  const { messages, sendMessage, status, error, regenerate, stop } = useChat<ChatMessage>({ transport });
   const bottomRef = useRef<HTMLDivElement>(null);
   const busy = status === "submitted" || status === "streaming";
 

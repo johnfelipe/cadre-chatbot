@@ -10,7 +10,10 @@ export default function Home() {
           Answers come from Cadre&apos;s published information. For anything else, the team can follow up.
         </p>
       </header>
-      <Chat maxMessageChars={CONFIG.limits.maxMessageChars} />
+      <Chat
+        maxMessageChars={CONFIG.limits.maxMessageChars}
+        maxHistoryMessages={CONFIG.limits.maxHistoryMessages}
+      />
     </main>
   );
 }

@@ -18,10 +18,7 @@ export const runtime = "nodejs";
 export const maxDuration = 30;
 
 const bodySchema = z.object({
-  messages: z
-    .array(z.object({ role: z.enum(["user", "assistant"]) }).loose())
-    .min(1)
-    .max(100),
+  messages: z.array(z.object({ role: z.enum(["user", "assistant"]) }).loose()).min(1),
 });
 
 function jsonError(status: number, error: string, headers?: HeadersInit) {
@@ -48,14 +45,21 @@ export async function POST(req: Request) {
 
   const body = bodySchema.safeParse(raw);
   if (!body.success) return jsonError(400, "Invalid request.");
+  if (body.data.messages.length > CONFIG.limits.maxRequestMessages) {
+    return jsonError(413, "This conversation is too long. Reload the page to start a new one.");
+  }
 
   const validated = await safeValidateUIMessages<ChatMessage>({ messages: body.data.messages, tools });
   if (!validated.success) return jsonError(400, "Invalid messages.");
 
   const messages = trimHistory(validated.data);
   if (messages.length === 0) return jsonError(400, "The conversation must include a user message.");
-  if (messages.some((m) => m.role === "user" && textLength(m) > CONFIG.limits.maxMessageChars)) {
+  if (messages.some((m) => m.role === "user" && messageText(m).length > CONFIG.limits.maxMessageChars)) {
     return jsonError(413, `Messages are limited to ${CONFIG.limits.maxMessageChars} characters.`);
+  }
+  const latest = messages.at(-1);
+  if (latest?.role !== "user" || !messageText(latest).trim()) {
+    return jsonError(400, "The message can't be empty.");
   }
 
   const openrouter = createOpenRouter({ apiKey });
@@ -81,6 +85,6 @@ function trimHistory(messages: ChatMessage[]): ChatMessage[] {
   return firstUser === -1 ? [] : recent.slice(firstUser);
 }
 
-function textLength(message: ChatMessage): number {
-  return message.parts.reduce((sum, part) => sum + (part.type === "text" ? part.text.length : 0), 0);
+function messageText(message: ChatMessage): string {
+  return message.parts.map((part) => (part.type === "text" ? part.text : "")).join("");
 }
