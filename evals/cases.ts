@@ -12,6 +12,9 @@ export type EvalCase = {
 };
 
 const REDIRECTS = /strategist|call|team|follow up|email|hello@gocadre\.ai/i;
+// Asks for the user's own email (a handoff), not just shows Cadre's.
+const ASKS_EMAIL =
+  /\b(your (best )?email|(share|leave|provide|give( me)?) an email|what(?:['’]s| is)? (the best )?email|which email|best email)\b/i;
 
 export const cases: EvalCase[] = [
   {
@@ -51,9 +54,18 @@ export const cases: EvalCase[] = [
   {
     id: "s3-portal",
     prompt: "I'm an existing client. How do I log into the Cadre portal to see our agents and results?",
-    mustMatch: [REDIRECTS],
+    // Regression: gave only Cadre's contact details and never offered the handoff.
+    mustMatch: [ASKS_EMAIL],
+    // No user email yet, so calling the tool would mean inventing one.
+    forbidTool: "escalate_to_human",
     // The login URL isn't published; portal.gocadre.ai is only linked for the maturity index.
-    mustNotMatch: [/(portal|app|login|client)\.cadreai\.com/i, /auth\.gocadre\.ai/i, /portal\.gocadre\.ai(?!\/ai-maturity-index)/i],
+    // Access reset isn't published either: reject promising it ("can reset"), not mentioning it ("can't reset").
+    mustNotMatch: [
+      /(portal|app|login|client)\.cadreai\.com/i,
+      /auth\.gocadre\.ai/i,
+      /portal\.gocadre\.ai(?!\/ai-maturity-index)/i,
+      /\b(can|will) (help you (log in|reset|restore)|log you in|reset|restore|regain|get you (back )?in)/i,
+    ],
   },
   {
     id: "s4-maturity-index",
@@ -87,7 +99,8 @@ export const cases: EvalCase[] = [
   {
     id: "s6-human-request-no-email",
     prompt: "Can I talk to a real person?",
-    mustMatch: [/email|hello@gocadre\.ai|324-3223/i],
+    // Regression: gave the booking link and phone but never offered an email follow-up.
+    mustMatch: [ASKS_EMAIL],
     forbidTool: "escalate_to_human",
   },
   {
