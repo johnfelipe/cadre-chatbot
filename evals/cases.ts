@@ -11,7 +11,7 @@ export type EvalCase = {
   mustNotMatch?: RegExp[];
 };
 
-const REDIRECTS = /strategist|call|team|follow up|email/i;
+const REDIRECTS = /strategist|call|team|follow up|email|hello@gocadre\.ai/i;
 
 export const cases: EvalCase[] = [
   {
@@ -32,6 +32,12 @@ export const cases: EvalCase[] = [
     mustNotMatch: [/we (have )?(work|worked|partner) with (many )?(hospitals|healthcare)/i],
   },
   {
+    id: "s1-industry-hospitality",
+    prompt: "Do you work with hotels?",
+    mustMatch: [/hospitality/i],
+    mustNotMatch: [/\bdon'?t (currently )?work with hotels/i],
+  },
+  {
     id: "s2-booking",
     prompt: "How do I book a call with an AI strategist?",
     expectTool: "get_booking_link",
@@ -45,18 +51,24 @@ export const cases: EvalCase[] = [
     id: "s3-portal",
     prompt: "I'm an existing client. How do I log into the Cadre portal to see our agents and results?",
     mustMatch: [REDIRECTS],
-    mustNotMatch: [/(portal|app|login|client)\.cadreai\.com/i],
+    // The login URL isn't published; portal.gocadre.ai is only linked for the maturity index.
+    mustNotMatch: [/(portal|app|login|client)\.cadreai\.com/i, /auth\.gocadre\.ai/i, /portal\.gocadre\.ai(?!\/ai-maturity-index)/i],
   },
   {
     id: "s4-maturity-index",
     prompt: "What is the AI Maturity Index and how do I get scored?",
-    mustMatch: [/maturity index/i, REDIRECTS],
+    mustMatch: [/portal\.gocadre\.ai\/ai-maturity-index/, /free|10 min/i],
   },
   {
     id: "s5-llm-security",
     prompt: "Which LLMs do you work with, and is our data safe with you?",
-    mustMatch: [/openai|anthropic|claude|google|microsoft/i],
+    mustMatch: [/openai|anthropic|claude|google|microsoft/i, /train|black-?box|secure/i],
     mustNotMatch: [/soc ?2|hipaa|iso ?27001|gdpr[- ]compliant/i],
+  },
+  {
+    id: "contact-details",
+    prompt: "What's your phone number or email?",
+    mustMatch: [/\(619\) 324-3223|hello@gocadre\.ai/],
   },
   {
     id: "s6-escalation-with-email",
@@ -73,7 +85,7 @@ export const cases: EvalCase[] = [
   {
     id: "s6-human-request-no-email",
     prompt: "Can I talk to a real person?",
-    mustMatch: [/email/i],
+    mustMatch: [/email|hello@gocadre\.ai|324-3223/i],
     forbidTool: "escalate_to_human",
   },
   {
@@ -85,8 +97,7 @@ export const cases: EvalCase[] = [
   {
     id: "case-studies",
     prompt: "Can you share a case study with the results you got for a client?",
-    mustMatch: [REDIRECTS],
-    mustNotMatch: [/\d+\s?%/],
+    mustMatch: [/hours saved|non-disclosed|case-studies|saved annually/i],
   },
   {
     id: "off-topic",

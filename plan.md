@@ -30,7 +30,7 @@ OUT (intentional)
 - [ ] 2. Knowledge base: seeded from the brief only. Next: knowledge-writer subagent on cadreai.com (booking link,
       portal, AI Maturity Index, LLM/security stance), each fact with its URL.
 - [x] 3. System prompt + tools (booking, escalation) + input validation + rate limit + `max_tokens` and history caps
-- [ ] 4. Evals: 15 cases and runner written, never run against the real model yet → run, fix failures
+- [ ] 4. Evals: 17 cases and runner written, never run against the real model yet → run, fix failures
 - [ ] 5. UI polish: starter questions, tool result cards and error/retry states done; Markdown rendering and a mobile pass pending
 - [ ] 6. README, update CLAUDE.md mistakes log, zip (with .git, without node_modules/.next)
 
@@ -64,7 +64,7 @@ OUT (intentional)
 - Measured system prompt (rules + knowledge): ~1.9k tokens. With tool schemas and history, a turn is ~3k input +
   ≤600 output tokens. At Haiku 4.5 list prices ($1/M input, $5/M output) that is ≈ $0.006 per turn, so ~800 turns;
   if knowledge grows to ~10k tokens, ≈ $0.013 per turn (~400 turns). Verify prices on OpenRouter before relying on this.
-- A full eval run is 15 turns (≈ $0.10). Evals, manual checks and reviewer traffic all share the budget.
+- A full eval run is 17 turns (≈ $0.10). Evals, manual checks and reviewer traffic all share the budget.
 - Guards: per-IP rate limit (10/min), 2000-char message cap, 12-message history window, 600-token output cap, 3 steps max.
 - No automated test calls the model. Only `npm run eval` and manual checks spend budget.
 - Check the balance in the OpenRouter dashboard before each eval run and before submitting.

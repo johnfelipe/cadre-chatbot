@@ -1,11 +1,24 @@
 // Runs evals/cases.ts against a running /api/chat. Every case is a real model call and spends budget.
 // Usage: npm run eval [-- <case-id-prefix> ...]   Target: EVAL_URL (default http://localhost:3000)
+import { readdir, readFile } from "node:fs/promises";
 import { cases, type EvalCase, type ToolName } from "./cases.ts";
 
 const BASE_URL = process.env.EVAL_URL ?? "http://localhost:3000";
 // The chat route allows 10 requests per minute per IP.
 const DELAY_MS = 6500;
-const ALLOWED_HOSTS = ["cadreai.com", "www.cadreai.com"];
+const URL_PATTERN = /https?:\/\/[^\s)\]>"'<,]+/g;
+
+function normalizeUrl(url: string): string {
+  return url.replace(/[.;:!?]+$/, "").replace(/\/$/, "");
+}
+
+// URLs the bot may cite: the ones written in knowledge/, plus whatever a tool returned in the same answer.
+async function knowledgeUrls(): Promise<Set<string>> {
+  const dir = new URL("../knowledge/", import.meta.url);
+  const files = (await readdir(dir)).filter((file) => file.endsWith(".md"));
+  const texts = await Promise.all(files.map((file) => readFile(new URL(file, dir), "utf8")));
+  return new Set(texts.flatMap((text) => (text.match(URL_PATTERN) ?? []).map(normalizeUrl)));
+}
 
 type Answer = { text: string; tools: ToolName[]; toolUrls: string[]; error?: string };
 
@@ -41,7 +54,7 @@ async function ask(evalCase: EvalCase): Promise<Answer> {
   return answer;
 }
 
-function check(evalCase: EvalCase, answer: Answer): string[] {
+function check(evalCase: EvalCase, answer: Answer, allowedUrls: Set<string>): string[] {
   if (answer.error) return [answer.error];
   const failures: string[] = [];
 
@@ -58,10 +71,9 @@ function check(evalCase: EvalCase, answer: Answer): string[] {
     if (pattern.test(answer.text)) failures.push(`matched forbidden ${pattern}`);
   }
 
-  const allowedHosts = [...ALLOWED_HOSTS, ...answer.toolUrls.map((url) => new URL(url).host)];
-  for (const url of answer.text.match(/https?:\/\/[^\s)\]>"']+/g) ?? []) {
-    const host = URL.canParse(url) ? new URL(url).host : url;
-    if (!allowedHosts.includes(host)) failures.push(`invented URL ${url}`);
+  const toolUrls = answer.toolUrls.map(normalizeUrl);
+  for (const url of (answer.text.match(URL_PATTERN) ?? []).map(normalizeUrl)) {
+    if (!allowedUrls.has(url) && !toolUrls.includes(url)) failures.push(`URL not in knowledge or tool output: ${url}`);
   }
   return failures;
 }
@@ -71,13 +83,14 @@ async function main() {
   const selected = filters.length ? cases.filter((c) => filters.some((f) => c.id.startsWith(f))) : cases;
   if (selected.length === 0) throw new Error(`No cases match: ${filters.join(", ")}`);
 
+  const allowedUrls = await knowledgeUrls();
   console.log(`Running ${selected.length} case(s) against ${BASE_URL}\n`);
   let failed = 0;
 
   for (const [i, evalCase] of selected.entries()) {
     if (i > 0) await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
     const answer = await ask(evalCase);
-    const failures = check(evalCase, answer);
+    const failures = check(evalCase, answer, allowedUrls);
     if (failures.length) failed += 1;
 
     console.log(`${failures.length ? "FAIL" : "PASS"}  ${evalCase.id}`);

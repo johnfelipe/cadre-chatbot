@@ -1,6 +1,6 @@
 ---
 description: Run behavioural evals (real model calls, spends budget) and diagnose failures
-argument-hint: [case-id prefixes, e.g. "s2 pricing"; empty = all 15 cases]
+argument-hint: [case-id prefixes, e.g. "s2 pricing"; empty = all cases]
 ---
 
 Run the evals with the `eval-runner` subagent. Cases to run: $ARGUMENTS (all cases if empty).
