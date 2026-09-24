@@ -124,13 +124,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
               );
             case "tool-get_booking_link":
               if (part.state !== "output-available") return null;
-              return (
-                <LinkCard
-                  key={key}
-                  href={part.output.available ? part.output.url : part.output.fallbackUrl}
-                  label={part.output.available ? "Book a strategy call" : "Visit cadreai.com"}
-                />
-              );
+              return <LinkCard key={key} href={part.output.url} label="Talk to an AI strategist" />;
             case "tool-escalate_to_human":
               if (part.state === "output-error") {
                 return <Notice key={key}>We couldn&apos;t reach the team. Please try again.</Notice>;

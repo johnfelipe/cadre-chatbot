@@ -59,7 +59,7 @@ code quality and verification 15%, communication 10%. "3 working features > 8 br
 
 ## Env vars (`.env.local` locally, Vercel project settings in prod)
 - `OPENROUTER_API_KEY` (required), `OPENROUTER_MODEL` (optional, defaults to `anthropic/claude-haiku-4.5`).
-- `BOOKING_URL` (optional): real booking link. Unset → `get_booking_link` falls back to the website.
+- `BOOKING_URL` (optional): overrides the booking link, which defaults to https://cadreai.com/contact (where every "Talk to an AI Strategist" button on the site leads).
 - `ESCALATION_WEBHOOK_URL` (optional): receives each escalation as JSON. Unset → escalations are only logged.
 
 ## Architecture (read before editing)

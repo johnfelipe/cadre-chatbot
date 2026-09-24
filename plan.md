@@ -38,7 +38,7 @@ OUT (intentional)
 - `POST /api/chat`: body `{ messages: UIMessage[] }` as sent by `useChat` (extra fields such as `id` and `trigger` are ignored).
   Response: AI SDK UI message stream (SSE). Errors: JSON `{ error }` with 400 (bad body), 413 (message too long),
   429 (rate limited, with `retry-after`) or 500 (not configured).
-- Tools: `get_booking_link() → { available: true, url } | { available: false, fallbackUrl }`;
+- Tools: `get_booking_link() → { url }` (cadreai.com/contact unless `BOOKING_URL` overrides it);
   `escalate_to_human({ email, name?, question, reason }) → { ok, id }`.
 - `Escalation = { id, createdAt, email, name?, question, reason }`, reason one of `user_requested_human`,
   `unknown_answer`, `account_specific`, `other`. Stored as a JSON log line, optionally POSTed to a webhook. No database.

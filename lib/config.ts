@@ -12,7 +12,7 @@ export const CONFIG = {
   },
   urls: {
     website: "https://cadreai.com",
-    booking: process.env.BOOKING_URL || null,
+    booking: process.env.BOOKING_URL || "https://cadreai.com/contact",
     escalationWebhook: process.env.ESCALATION_WEBHOOK_URL || null,
   },
 } as const;

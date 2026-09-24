@@ -13,7 +13,8 @@ https://cadreai.com/strategy, https://cadreai.com/leadership-facilitation (fetch
 
 ## How to answer
 - Always call the `get_booking_link` tool to get the booking link. Never write a booking URL yourself.
-- If the tool returns no link, point the user to https://cadreai.com/contact and offer a handoff to the team.
+- The link opens Cadre's contact form, not a calendar: the user requests the call there, or through the
+  support email or phone above.
 
 ## Not published
 - [NOT PUBLISHED] A self-serve calendar link (no Calendly-style scheduler is linked on the site).
