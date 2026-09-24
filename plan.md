@@ -33,6 +33,7 @@ OUT (intentional)
 - [x] 3. System prompt + tools (booking, escalation) + input validation + rate limit + `max_tokens` and history caps
 - [x] 4. Evals: 17 cases against production. Run 1: 15/17 (one bot bug, one runner bug, one rule too strict).
       Run 2: 15/17 (Markdown bold in list labels). After the fixes, the 2 failing cases pass; see the mistakes log.
+      Added 5 knowledge-gap cases (price, headcount, client names, two false premises): 5/5 on production. 22 cases total.
 - [x] 5. UI polish: starter questions, tool result cards, error/retry states, bold and clickable links, mobile pass
       (390×844: no horizontal overflow, fixed header and input, long URLs wrap, 44px touch targets)
 - [ ] 6. README, update CLAUDE.md mistakes log, zip (with .git, without node_modules/.next)
@@ -67,8 +68,8 @@ OUT (intentional)
 - System prompt (rules + knowledge): ~5k tokens after the cadreai.com research (was ~1.9k from the brief alone).
   With tool schemas and history, a turn is ~6k input + ≤600 output tokens. At Haiku 4.5 list prices ($1/M input,
   $5/M output) that is ≈ $0.009 per turn, so ~500 turns. Verify prices on OpenRouter before relying on this.
-- Spent so far (2026-09-24): 3 full eval runs + 2 re-runs + 1 manual check ≈ 54 turns ≈ $0.50 at the estimate above.
-- A full eval run is 17 turns (≈ $0.10). Evals, manual checks and reviewer traffic all share the budget.
+- Spent so far (2026-09-24): 3 full eval runs + 3 partial runs + 2 manual checks ≈ 60 turns ≈ $0.55 at the estimate above.
+- A full eval run is 22 turns (≈ $0.20). Evals, manual checks and reviewer traffic all share the budget.
 - Guards: per-IP rate limit (10/min), 2000-char message cap, 12-message history window, 600-token output cap, 3 steps max.
 - No automated test calls the model. Only `npm run eval` and manual checks spend budget.
 - Check the balance in the OpenRouter dashboard before each eval run and before submitting.
