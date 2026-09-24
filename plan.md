@@ -68,6 +68,10 @@ OUT (intentional)
 | Tools return URLs from config | Model can't hallucinate links | — |
 | In-memory rate limit | Zero infra for MVP | Real traffic → Upstash Redis |
 | Escalation = log + webhook | Team gets notified without building a CRM | Volume justifies HubSpot/Salesforce integration |
+| Reply in the user's language | Prospects write in Spanish too; the knowledge is English but the model translates it well (eval `spanish`) | A language answers poorly in evals |
+| Chat history not persisted: a reload starts a new conversation | No PII in browser storage and no DB; the same behaviour every time (checked: nothing in local/sessionStorage) | Users ask to resume chats |
+| Client sends only the last 12 messages; server caps requests at 100 (413) and uses the last 12 | Long chats never hit the cap and stay under the model's context and the token budget | Answers need older context |
+| Empty or whitespace-only messages blocked in the UI and rejected by the API (400) | No model call for nothing; the API can't rely on the UI | — |
 
 ## Budget ($5 OpenRouter key)
 - System prompt (rules + knowledge): ~5k tokens after the cadreai.com research (was ~1.9k from the brief alone).
