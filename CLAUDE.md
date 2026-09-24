@@ -104,3 +104,8 @@ code quality and verification 15%, communication 10%. "3 working features > 8 br
 - The first gotchas in this file were AI SDK v5 (`stepCountIs`, `system`), but npm installed v7. A subagent read the bundled v7 docs before the route was written, and the gotchas were rewritten.
 - `npm run typecheck` failed on `LayoutProps` because Next 16 generates route types; the script now runs `next typegen` first.
 - Assumed a ~10k-token system prompt when estimating budget; measured ~1.9k. plan.md budget updated.
+- knowledge/industries.md kept two industry lists (brief and website); the bot said hospitality "isn't named" and then
+  listed it. Caught by reading eval answers, not by the pass/fail line: always read the answers. Fixed with one list + regression case.
+- The prompt forbade Markdown but the model kept **bold** labels. Fixed in the UI (renders bold) instead of fighting the model.
+- Two eval false failures: a URL regex that swallowed "**", and a SOC 2 rule that rejected "SOC 2 isn't published". Rules now target claims, not mentions.
+- `vercel link` appended `.vercel` and `.env*` to .gitignore; the trailing `.env*` would have re-ignored `.env.example`. Reverted.

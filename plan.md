@@ -26,12 +26,14 @@ OUT (intentional)
 
 ## Phases
 - [x] 0. CLAUDE.md, plan.md, .claude/ agents + commands  → commit
-- [ ] 1. Scaffold Next.js + minimal streaming chat + deploy to Vercel  → live URL. Code done and verified locally; **not deployed yet**.
-- [ ] 2. Knowledge base: seeded from the brief only. Next: knowledge-writer subagent on cadreai.com (booking link,
-      portal, AI Maturity Index, LLM/security stance), each fact with its URL.
+- [x] 1. Scaffold Next.js + minimal streaming chat + deploy to Vercel → https://cadre-chatbot-ebon.vercel.app
+      (Git integration: every push to `main` deploys to production).
+- [x] 2. Knowledge base: knowledge-writer subagent researched cadreai.com (2026-09-24), one source URL per fact;
+      key facts spot-checked by hand.
 - [x] 3. System prompt + tools (booking, escalation) + input validation + rate limit + `max_tokens` and history caps
-- [ ] 4. Evals: 17 cases and runner written, never run against the real model yet → run, fix failures
-- [ ] 5. UI polish: starter questions, tool result cards and error/retry states done; Markdown rendering and a mobile pass pending
+- [x] 4. Evals: 17 cases against production. Run 1: 15/17 (one bot bug, one runner bug, one rule too strict).
+      Run 2: 15/17 (Markdown bold in list labels). After the fixes, the 2 failing cases pass; see the mistakes log.
+- [ ] 5. UI polish: starter questions, tool result cards, error/retry states, bold and clickable links done; mobile pass pending
 - [ ] 6. README, update CLAUDE.md mistakes log, zip (with .git, without node_modules/.next)
 
 ## API and data model
@@ -61,9 +63,10 @@ OUT (intentional)
 | Escalation = log + webhook | Team gets notified without building a CRM | Volume justifies HubSpot/Salesforce integration |
 
 ## Budget ($5 OpenRouter key)
-- Measured system prompt (rules + knowledge): ~1.9k tokens. With tool schemas and history, a turn is ~3k input +
-  ≤600 output tokens. At Haiku 4.5 list prices ($1/M input, $5/M output) that is ≈ $0.006 per turn, so ~800 turns;
-  if knowledge grows to ~10k tokens, ≈ $0.013 per turn (~400 turns). Verify prices on OpenRouter before relying on this.
+- System prompt (rules + knowledge): ~5k tokens after the cadreai.com research (was ~1.9k from the brief alone).
+  With tool schemas and history, a turn is ~6k input + ≤600 output tokens. At Haiku 4.5 list prices ($1/M input,
+  $5/M output) that is ≈ $0.009 per turn, so ~500 turns. Verify prices on OpenRouter before relying on this.
+- Spent so far (2026-09-24): 2 full eval runs + 2 re-runs + 1 manual check ≈ 37 turns ≈ $0.35 at the estimate above.
 - A full eval run is 17 turns (≈ $0.10). Evals, manual checks and reviewer traffic all share the budget.
 - Guards: per-IP rate limit (10/min), 2000-char message cap, 12-message history window, 600-token output cap, 3 steps max.
 - No automated test calls the model. Only `npm run eval` and manual checks spend budget.
@@ -72,8 +75,9 @@ OUT (intentional)
 ## Known limitations
 - In-memory rate limit resets per serverless instance.
 - Escalation logs contain PII (email) in Vercel logs — acceptable for demo, not production.
-- Knowledge is seeded from the brief only, so booking, portal, AI Maturity Index and security answers currently
-  redirect or escalate. Accuracy after research depends on the cadreai.com snapshot (date: ____).
+- Knowledge is a snapshot of cadreai.com taken 2026-09-24; it goes stale when the site changes.
+- The portal login URL and security specifics (SOC 2, data residency, NDAs) aren't published, so those answers
+  escalate or redirect by design.
 - The client sends the full history, so a user could forge earlier assistant turns. Acceptable for a public FAQ bot
   with no privileged actions; a server-side session store would close it.
 

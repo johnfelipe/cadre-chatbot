@@ -3,7 +3,7 @@
 A support chatbot for Cadre AI's website. It answers common inbound questions from a curated knowledge base,
 routes interested prospects to a strategist call, and hands anything it can't answer to the Cadre team.
 
-**Live URL:** _not deployed yet_
+**Live URL:** https://cadre-chatbot-ebon.vercel.app (Vercel, redeployed on every push to `main`)
 
 ## What it handles
 1. What Cadre AI does and whether it works with the user's industry
