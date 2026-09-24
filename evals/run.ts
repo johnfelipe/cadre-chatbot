@@ -4,8 +4,8 @@ import { readdir, readFile } from "node:fs/promises";
 import { cases, type EvalCase, type ToolName } from "./cases.ts";
 
 const BASE_URL = process.env.EVAL_URL ?? "http://localhost:3000";
-// The chat route allows 10 requests per minute per IP.
-const DELAY_MS = 6500;
+// The chat route allows 10 requests per minute per IP; on 429 wait for retry-after instead of pacing every call.
+const MAX_RATE_LIMIT_RETRIES = 3;
 const URL_PATTERN = /https?:\/\/[^\s)\]>"'<,*—–]+/g;
 
 function normalizeUrl(url: string): string {
@@ -22,22 +22,33 @@ async function knowledgeUrls(): Promise<Set<string>> {
 
 type Answer = { text: string; tools: ToolName[]; toolUrls: string[]; error?: string };
 
-async function ask(evalCase: EvalCase): Promise<Answer> {
+async function post(evalCase: EvalCase): Promise<Response> {
   const turns = [...(evalCase.history ?? []), { role: "user" as const, text: evalCase.prompt }];
-  const res = await fetch(`${BASE_URL}/api/chat`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      id: `eval-${evalCase.id}`,
-      trigger: "submit-message",
-      messages: turns.map((turn, i) => ({
-        id: `${evalCase.id}-${i}`,
-        role: turn.role,
-        parts: [{ type: "text", text: turn.text }],
-      })),
-    }),
+  const body = JSON.stringify({
+    id: `eval-${evalCase.id}`,
+    trigger: "submit-message",
+    messages: turns.map((turn, i) => ({
+      id: `${evalCase.id}-${i}`,
+      role: turn.role,
+      parts: [{ type: "text", text: turn.text }],
+    })),
   });
 
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(`${BASE_URL}/api/chat`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body,
+    });
+    if (res.status !== 429 || attempt === MAX_RATE_LIMIT_RETRIES) return res;
+    const waitSeconds = Number(res.headers.get("retry-after")) || 60;
+    console.log(`  (rate limited, waiting ${waitSeconds}s)`);
+    await new Promise((resolve) => setTimeout(resolve, waitSeconds * 1000));
+  }
+}
+
+async function ask(evalCase: EvalCase): Promise<Answer> {
+  const res = await post(evalCase);
   if (!res.ok) return { text: "", tools: [], toolUrls: [], error: `HTTP ${res.status}: ${await res.text()}` };
 
   const answer: Answer = { text: "", tools: [], toolUrls: [] };
@@ -91,8 +102,8 @@ async function main() {
   console.log(`Running ${selected.length} case(s) against ${BASE_URL}\n`);
   let failed = 0;
 
-  for (const [i, evalCase] of selected.entries()) {
-    if (i > 0) await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+  const startedAt = Date.now();
+  for (const evalCase of selected) {
     const answer = await ask(evalCase);
     const failures = check(evalCase, answer, allowedUrls);
     if (failures.length) failed += 1;
@@ -105,7 +116,8 @@ async function main() {
     console.log();
   }
 
-  console.log(`${selected.length - failed}/${selected.length} passed`);
+  const seconds = Math.round((Date.now() - startedAt) / 1000);
+  console.log(`${selected.length - failed}/${selected.length} passed in ${seconds}s`);
   if (failed) process.exitCode = 1;
 }
 
