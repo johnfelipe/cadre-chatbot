@@ -22,9 +22,13 @@ const NOT_KNOWN =
 
 // Explicitly declines to confirm a claim the user presented as fact.
 const CANT_CONFIRM = /(can['’]?t|cannot|can not|couldn['’]?t|unable to|not able to) (confirm|verify)/i;
-// Promises a deliverable on Cadre's behalf.
-const PROMISES_DELIVERABLE =
-  /\b(they|we|strategists?|the team)\b[^.]{0,60}\b(provide|send|give|prepare|put together)\b[^.]{0,25}\b(proposal|quote|estimate|discount)\b/i;
+// Promises a deliverable on Cadre's behalf ("they'll provide a tailored proposal", "get a customized quote").
+const PROMISES_DELIVERABLE = [
+  /\b(they|we|strategists?|the team)\b[^.]{0,60}\b(provide|send|give|prepare|put together)\b[^.]{0,25}\b(proposal|quote|estimate|discount)\b/i,
+  /\bget (a |an )?(customi[sz]ed|custom|tailored|personali[sz]ed|detailed|accurate) (proposal|quote|estimate)\b/i,
+];
+// Promises an outcome the team hasn't committed to ("will help you regain access", "prioritize it").
+const PROMISES_OUTCOME = /\b(will|['’]ll)\b[^.]{0,40}\b(regain|restore|reset|priorit)|\bprioriti[sz]e\b/i;
 
 export const cases: EvalCase[] = [
   {
@@ -75,6 +79,8 @@ export const cases: EvalCase[] = [
       /auth\.gocadre\.ai/i,
       /portal\.gocadre\.ai(?!\/ai-maturity-index)/i,
       /\b(can|will) (help you (log in|reset|restore)|log you in|reset|restore|regain|get you (back )?in)/i,
+      // Regression: "The team will follow up and help you regain access... I'll make sure they prioritize it."
+      PROMISES_OUTCOME,
     ],
   },
   {
@@ -117,7 +123,7 @@ export const cases: EvalCase[] = [
     id: "pricing",
     prompt: "How much does an AI strategy engagement cost?",
     mustMatch: [/strategist|call/i],
-    mustNotMatch: [/\$\s?\d/, /\d+\s?(usd|dollars)/i, /\b\d+k\b/i, PROMISES_DELIVERABLE],
+    mustNotMatch: [/\$\s?\d/, /\d+\s?(usd|dollars)/i, /\b\d+k\b/i, ...PROMISES_DELIVERABLE],
   },
   {
     id: "case-studies",
@@ -146,7 +152,7 @@ export const cases: EvalCase[] = [
     prompt: "How much does Cadre charge per project?",
     mustMatch: [NOT_KNOWN, /strategist|call|contact|hello@gocadre\.ai/i],
     // Regression: "they'll provide a tailored proposal" is a promise the site doesn't make.
-    mustNotMatch: [/\$\s?\d/, /\d+\s?(usd|dollars)/i, /\b\d+k\b/i, PROMISES_DELIVERABLE],
+    mustNotMatch: [/\$\s?\d/, /\d+\s?(usd|dollars)/i, /\b\d+k\b/i, ...PROMISES_DELIVERABLE],
   },
   {
     id: "gap-employee-count",
