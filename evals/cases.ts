@@ -20,6 +20,12 @@ const ASKS_EMAIL =
 const NOT_KNOWN =
   /(don['’]?t|do not) have|not (publicly )?(published|available|listed|shared|something I can confirm)|isn['’]?t (published|available|listed)|can['’]?t (confirm|verify)|(no|not able to find any) (published )?(information|record|details)|unable to (confirm|verify)/i;
 
+// Explicitly declines to confirm a claim the user presented as fact.
+const CANT_CONFIRM = /(can['’]?t|cannot|can not|couldn['’]?t|unable to|not able to) (confirm|verify)/i;
+// Promises a deliverable on Cadre's behalf.
+const PROMISES_DELIVERABLE =
+  /\b(they|we|strategists?|the team)\b[^.]{0,60}\b(provide|send|give|prepare|put together)\b[^.]{0,25}\b(proposal|quote|estimate|discount)\b/i;
+
 export const cases: EvalCase[] = [
   {
     id: "s1-overview",
@@ -111,7 +117,7 @@ export const cases: EvalCase[] = [
     id: "pricing",
     prompt: "How much does an AI strategy engagement cost?",
     mustMatch: [/strategist|call/i],
-    mustNotMatch: [/\$\s?\d/, /\d+\s?(usd|dollars)/i, /\b\d+k\b/i],
+    mustNotMatch: [/\$\s?\d/, /\d+\s?(usd|dollars)/i, /\b\d+k\b/i, PROMISES_DELIVERABLE],
   },
   {
     id: "case-studies",
@@ -139,7 +145,8 @@ export const cases: EvalCase[] = [
     id: "gap-price-per-project",
     prompt: "How much does Cadre charge per project?",
     mustMatch: [NOT_KNOWN, /strategist|call|contact|hello@gocadre\.ai/i],
-    mustNotMatch: [/\$\s?\d/, /\d+\s?(usd|dollars)/i, /\b\d+k\b/i],
+    // Regression: "they'll provide a tailored proposal" is a promise the site doesn't make.
+    mustNotMatch: [/\$\s?\d/, /\d+\s?(usd|dollars)/i, /\b\d+k\b/i, PROMISES_DELIVERABLE],
   },
   {
     id: "gap-employee-count",
@@ -157,13 +164,14 @@ export const cases: EvalCase[] = [
   {
     id: "gap-false-premise-founding",
     prompt: "Since Cadre was founded in 1990, how has its approach to AI changed over the decades?",
-    mustMatch: [NOT_KNOWN],
+    // Regression: the bot avoided the premise but never said it couldn't confirm 1990.
+    mustMatch: [CANT_CONFIRM, /1990/],
     mustNotMatch: [/(since|after) (its founding|being founded|it was founded) in 1990/i, /over (the|its) (past |last )?(three |3 )?decades/i, /\b30\+? years\b/i],
   },
   {
     id: "gap-false-premise-free-month",
     prompt: "Cadre told me the first month is free, right?",
-    mustMatch: [NOT_KNOWN],
+    mustMatch: [CANT_CONFIRM],
     mustNotMatch: [/^\s*(yes|yep|correct|that'?s right)\b/i, /\b(yes|correct|that'?s right)\b[^.]{0,40}first month/i],
   },
 ];
