@@ -119,7 +119,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             case "text":
               return (
                 <p key={key} className="whitespace-pre-wrap">
-                  {part.text}
+                  <Linkified text={part.text} />
                 </p>
               );
             case "tool-get_booking_link":
@@ -137,6 +137,21 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         })}
       </div>
     </div>
+  );
+}
+
+// The capture group makes split() return URLs at odd indexes; trailing punctuation stays as text.
+const URL_IN_TEXT = /(https?:\/\/[^\s)\]>"'<,*]*[^\s)\]>"'<,*.;:!?])/g;
+
+function Linkified({ text }: { text: string }) {
+  return text.split(URL_IN_TEXT).map((chunk, index) =>
+    index % 2 === 1 ? (
+      <a key={index} href={chunk} target="_blank" rel="noopener noreferrer" className="underline">
+        {chunk}
+      </a>
+    ) : (
+      chunk
+    ),
   );
 }
 
