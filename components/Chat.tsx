@@ -141,7 +141,8 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 }
 
 // Capture groups make split() return matches at odd indexes; trailing punctuation stays as text.
-const URL_IN_TEXT = /(https?:\/\/[^\s)\]>"'<,*]*[^\s)\]>"'<,*.;:!?])/g;
+// Dashes too: the model writes "…/ai-maturity-index—it" with no space.
+const URL_IN_TEXT = /(https?:\/\/[^\s)\]>"'<,*—–]*[^\s)\]>"'<,*.;:!?—–])/g;
 const BOLD = /\*\*(.+?)\*\*/g;
 
 function RichText({ text }: { text: string }) {

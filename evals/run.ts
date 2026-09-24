@@ -6,7 +6,7 @@ import { cases, type EvalCase, type ToolName } from "./cases.ts";
 const BASE_URL = process.env.EVAL_URL ?? "http://localhost:3000";
 // The chat route allows 10 requests per minute per IP.
 const DELAY_MS = 6500;
-const URL_PATTERN = /https?:\/\/[^\s)\]>"'<,*]+/g;
+const URL_PATTERN = /https?:\/\/[^\s)\]>"'<,*—–]+/g;
 
 function normalizeUrl(url: string): string {
   return url.replace(/[.;:!?]+$/, "").replace(/\/$/, "");
