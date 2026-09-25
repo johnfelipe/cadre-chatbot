@@ -6,6 +6,8 @@
       "Bash(npm run typecheck)",
       "Bash(npm run build)",
       "Bash(npm run dev)",
+      "Bash(npm test)",
+      "Bash(npx vitest run*)",
       "Bash(git status*)",
       "Bash(git diff*)",
       "Bash(git log*)",
@@ -28,6 +30,22 @@
       "Bash(cat .env*)",
       "Bash(git push --force*)",
       "Bash(git reset --hard*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [{ "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-knowledge.mjs\"" }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          { "type": "command", "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/check-edit.mjs\"", "timeout": 120 }
+        ]
+      }
     ]
   }
 }

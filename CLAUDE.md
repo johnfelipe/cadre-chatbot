@@ -76,7 +76,9 @@ code quality and verification 15%, communication 10%. "3 working features > 8 br
 - `app/api/chat/route.ts` — single endpoint: key check → rate limit → validate → trim history → length cap → streamText (OpenRouter, `maxOutputTokens` capped) → UI message stream.
 - `components/Chat.tsx` — `useChat` client; renders text parts and tool parts (booking card, escalation notice).
 - `evals/` — behavioral regression tests. Add a case for every bug found in the bot's answers.
-- `.claude/` — permissions, subagents (`knowledge-writer`, `code-reviewer`, `eval-runner`) and slash commands.
+- `.claude/` — permissions, subagents (`knowledge-writer`, `code-reviewer`, `eval-runner`), slash commands and hooks:
+  `guard-knowledge.mjs` (PreToolUse) blocks new `## Facts` in `knowledge/` that carry a number, price or URL without
+  `(source: …)`; `check-edit.mjs` (PostToolUse) lints the edited .ts/.tsx file and typechecks, feeding errors back.
 
 ## Rules
 - NEVER add facts about Cadre (pricing, clients, certifications, URLs) that aren't in `knowledge/`.

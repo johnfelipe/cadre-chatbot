@@ -7,7 +7,8 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["**/*.test.{ts,tsx}"],
+    // Globs skip dot-folders, so the Claude Code hook tests are listed explicitly.
+    include: ["**/*.test.{ts,tsx}", ".claude/hooks/*.test.ts"],
     exclude: ["node_modules/**", ".next/**"],
     restoreMocks: true,
     unstubEnvs: true,
