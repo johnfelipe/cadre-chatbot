@@ -6,6 +6,7 @@ export const CONFIG = {
     maxOutputTokens: 600,
     maxHistoryMessages: 12,
     maxRequestMessages: 100,
+    maxBodyBytes: 256_000,
     maxMessageChars: 2000,
     maxSteps: 3,
   },

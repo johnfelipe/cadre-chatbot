@@ -91,6 +91,22 @@ describe("POST /api/chat: rejections", () => {
     expect(Number(res.headers.get("retry-after"))).toBeGreaterThan(0);
   });
 
+  it("403 for a browser request from another site; same-origin and server-to-server calls pass", async () => {
+    const body = chat([{ role: "user", text: "hi" }]);
+    const crossSite = await POST(request(body, { origin: "https://evil.example", host: "cadre.example" }));
+    expect(crossSite.status).toBe(403);
+
+    expect((await POST(request(body, { origin: "https://cadre.example", host: "cadre.example" }))).status).toBe(200);
+    expect((await POST(request(body))).status).toBe(200);
+  });
+
+  it("413 when content-length exceeds the body cap, before reading it", async () => {
+    const res = await POST(
+      request(chat([{ role: "user", text: "hi" }]), { "content-length": String(CONFIG.limits.maxBodyBytes + 1) }),
+    );
+    expect(res.status).toBe(413);
+  });
+
   it("never calls the model for a rejected request", async () => {
     await POST(request(chat([{ role: "user", text: " " }])));
     expect(streamText).not.toHaveBeenCalled();
@@ -105,7 +121,10 @@ describe("POST /api/chat: accepted requests", () => {
     const options = streamText.mock.calls[0]![0] as Record<string, unknown>;
     expect(options.maxOutputTokens).toBe(CONFIG.limits.maxOutputTokens);
     expect(options.temperature).toBe(CONFIG.temperature);
-    expect(options.instructions).toMatch(/<knowledge>[\s\S]*<doc name="company.md">/);
+    const instructions = options.instructions as { role: string; content: string; providerOptions: unknown };
+    expect(instructions.role).toBe("system");
+    expect(instructions.content).toMatch(/<knowledge>[\s\S]*<doc name="company.md">/);
+    expect(instructions.providerOptions).toEqual({ openrouter: { cacheControl: { type: "ephemeral" } } });
     expect(Object.keys(options.tools as object).sort()).toEqual(["escalate_to_human", "get_booking_link"]);
   });
 

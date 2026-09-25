@@ -34,11 +34,21 @@ export async function POST(req: Request) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) return jsonError(500, "The chat is not configured.");
 
+  // Browsers send Origin on cross-site POSTs; server-to-server callers (the eval runner) don't.
+  const origin = req.headers.get("origin");
+  if (origin && URL.canParse(origin) && new URL(origin).host !== req.headers.get("host")) {
+    return jsonError(403, "Requests from other sites aren't allowed.");
+  }
+
   const limit = checkRateLimit(clientKey(req));
   if (!limit.ok) {
     return jsonError(429, "Too many messages. Please wait a moment and try again.", {
       "retry-after": String(limit.retryAfterSeconds),
     });
+  }
+
+  if (Number(req.headers.get("content-length")) > CONFIG.limits.maxBodyBytes) {
+    return jsonError(413, "The request is too large.");
   }
 
   let raw: unknown;
@@ -67,17 +77,40 @@ export async function POST(req: Request) {
     return jsonError(400, "The message can't be empty.");
   }
 
-  const requestTools = buildTools({ conversationId: body.data.id, transcript: transcriptOf(messages) });
+  const conversationId = body.data.id;
+  const requestTools = buildTools({ conversationId, transcript: transcriptOf(messages) });
   const openrouter = createOpenRouter({ apiKey });
+  const startedAt = Date.now();
   const result = streamText({
     model: openrouter(CONFIG.model),
-    instructions: buildSystemPrompt(await loadKnowledge()),
+    // The rules + knowledge prefix is identical on every request, so Anthropic can serve it from cache.
+    instructions: {
+      role: "system",
+      content: buildSystemPrompt(await loadKnowledge()),
+      providerOptions: { openrouter: { cacheControl: { type: "ephemeral" } } },
+    },
     messages: await convertToModelMessages(messages, { tools: requestTools }),
     tools: requestTools,
     maxOutputTokens: CONFIG.limits.maxOutputTokens,
     temperature: CONFIG.temperature,
     stopWhen: isStepCount(CONFIG.limits.maxSteps),
     onError: ({ error }) => console.error("[chat] stream error", error),
+    onEnd: ({ totalUsage, finishReason, steps }) => {
+      console.info(
+        "[chat]",
+        JSON.stringify({
+          conversationId,
+          latencyMs: Date.now() - startedAt,
+          finishReason,
+          steps: steps.length,
+          tools: steps.flatMap((step) => step.toolCalls.map((call) => call.toolName)),
+          inputTokens: totalUsage.inputTokens,
+          cacheReadTokens: totalUsage.inputTokenDetails?.cacheReadTokens,
+          cacheWriteTokens: totalUsage.inputTokenDetails?.cacheWriteTokens,
+          outputTokens: totalUsage.outputTokens,
+        }),
+      );
+    },
   });
 
   return createUIMessageStreamResponse({
