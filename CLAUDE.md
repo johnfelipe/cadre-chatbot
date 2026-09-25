@@ -117,6 +117,8 @@ code quality and verification 15%, communication 10%. "3 working features > 8 br
 - `vercel link` appended `.vercel` and `.env*` to .gitignore; the trailing `.env*` would have re-ignored `.env.example`. Reverted.
 - Added a "don't promise what the team will do" rule to the prompt but left knowledge/portal.md saying "say the team will follow up".
   The bot kept promising ("they'll get you sorted") until the knowledge file was fixed. When a rule changes, grep knowledge/ for "How to answer" lines that contradict it.
+- Budget estimates counted one model call per turn, but a turn that calls a tool runs two steps and sends the ~7k-token
+  prefix twice (14.5k input measured). Found only once per-request usage logging existed: measure, don't estimate.
 - The first "asks for the user's email" eval regex also matched the bot giving out Cadre's own address ("email hello@…"),
   and the access-promise guard missed the bot's real wording. Caught by the code-reviewer subagent; eval regexes are now
   tested in node against the real answer and near-misses before committing.

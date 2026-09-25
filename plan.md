@@ -74,7 +74,9 @@ OUT (intentional)
 | OpenRouter as the only LLM transport | Required by the brief; one key, model swappable via `OPENROUTER_MODEL` | — |
 | Haiku 4.5 over Sonnet | Support Q&A over small corpus; latency and cost dominate | Evals show reasoning failures |
 | Temperature 0.2 (default was the model's 1.0) | Support answers should be consistent; at 1.0 s3-portal passed only 2 of 3 runs | Answers read robotic or repetitive |
-| Full knowledge in system prompt | < 10k tokens; no retrieval misses; prompt caching can make it cheaper | Corpus > ~50k tokens |
+| Full knowledge in system prompt | < 10k tokens; no retrieval misses; prompt caching makes it cheap | Corpus > ~50k tokens |
+| Anthropic prompt caching on the system prompt (via OpenRouter `cacheControl`) | The ~7k-token prefix is identical on every call; measured in prod: 13,786 of 14,520 input tokens read from cache on a booking turn | Prompt varies per user (then cache only the knowledge block) |
+| Spend cap = OpenRouter key credit limit, not an in-app counter | An in-memory counter isn't shared across serverless instances, so it would give false safety; the key limit is enforced upstream | Real traffic → daily token counter in Redis |
 | Tools return URLs from config | Model can't hallucinate links | — |
 | In-memory rate limit | Zero infra for MVP | Real traffic → Upstash Redis |
 | Escalation = log + webhook | Team gets notified without building a CRM | Volume justifies HubSpot/Salesforce integration |
@@ -84,20 +86,25 @@ OUT (intentional)
 | Empty or whitespace-only messages blocked in the UI and rejected by the API (400) | No model call for nothing; the API can't rely on the UI | — |
 
 ## Budget ($5 OpenRouter key)
-- System prompt (rules + knowledge): ~5k tokens after the cadreai.com research (was ~1.9k from the brief alone).
-  With tool schemas and history, a turn is ~6k input + ≤600 output tokens. At Haiku 4.5 list prices ($1/M input,
-  $5/M output) that is ≈ $0.009 per turn, so ~500 turns. Verify prices on OpenRouter before relying on this.
-- Spent on the challenge key (2026-09-24): 6 full eval runs + 4 partial runs + 2 manual checks ≈ 128 turns ≈ $1.15 at the estimate above.
+- Measured (per-request `[chat]` log line, 2026-09-25): prompt + tool schemas ≈ 7k tokens, and a turn that calls a
+  tool runs 2 steps, so it sends the prefix twice: 14,520 input tokens, 109 output.
+  - Without caching (Haiku 4.5: $1/M input, $5/M output): ≈ $0.015 per tool turn, ≈ $0.008 per plain turn.
+  - With caching (cache reads at 10% of the input price): 13,786 cached + 734 uncached + 109 output ≈ $0.003 per tool
+    turn, about 5x cheaper. Verify prices on OpenRouter before relying on this.
+- The earlier estimate ($0.006–0.009 per turn) missed the second step on tool turns, so spend before caching was
+  higher than estimated. Spent on the challenge key (2026-09-24): ≈ 128 turns, likely $1.2–1.9; the OpenRouter
+  dashboard has the real figure.
 - From 2026-09-24 17:43 production runs on a personal OpenRouter key so testing doesn't eat the challenge budget;
   later eval runs are not counted above. The challenge key goes back before submission (see phase 6).
-- A full eval run is 22 turns (≈ $0.20). Evals, manual checks and reviewer traffic all share the budget.
+- A full eval run is 82 cases (≈ 78 model turns, ≈ $0.25 with caching). Evals, manual checks and reviewer traffic all share the budget.
 - Guards: per-IP rate limit (10/min), 2000-char message cap, 12-message history window, 600-token output cap, 3 steps max.
 - No automated test calls the model. Only `npm run eval` and manual checks spend budget.
 - Check the balance in the OpenRouter dashboard before each eval run and before submitting.
 
 ## Known limitations
 - In-memory rate limit resets per serverless instance.
-- Escalation logs contain PII (email) in Vercel logs — acceptable for demo, not production.
+- Escalation emails are masked in the logs only when a webhook is configured; without one the log is the only
+  record and keeps the full email. Acceptable for a demo, not for production.
 - Knowledge is a snapshot of cadreai.com taken 2026-09-24; it goes stale when the site changes.
 - The portal login URL and security specifics (SOC 2, data residency, NDAs) aren't published, so those answers
   escalate or redirect by design.
