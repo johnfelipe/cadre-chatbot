@@ -155,7 +155,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 const URL_IN_TEXT = /(https?:\/\/[^\s)\]>"'<,*—–]*[^\s)\]>"'<,*.;:!?—–])/g;
 const BOLD = /\*\*(.+?)\*\*/g;
 
-function RichText({ text }: { text: string }) {
+export function RichText({ text }: { text: string }) {
   return text.split(BOLD).map((chunk, index) =>
     index % 2 === 1 ? (
       <strong key={index}>

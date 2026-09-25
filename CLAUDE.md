@@ -54,6 +54,8 @@ code quality and verification 15%, communication 10%. "3 working features > 8 br
 - `npm run build` — must pass before any commit that touches app/ or lib/
 - `npm run lint` — eslint
 - `npm run typecheck` — `next typegen` (route types like `LayoutProps`) + `tsc --noEmit`
+- `npm test` — Vitest unit tests (`*.test.ts(x)` next to the code). The model is always mocked; costs nothing.
+  Single file: `npx vitest run app/api/chat/route.test.ts`.
 - `npm run eval [-- <case-id-prefix> ...]` — posts evals/cases.ts to a running `/api/chat` (`EVAL_URL`, default
   localhost:3000, whose server needs `OPENROUTER_API_KEY`). Real model calls: spends budget, run deliberately.
 
@@ -83,7 +85,8 @@ code quality and verification 15%, communication 10%. "3 working features > 8 br
 - Every API input is validated with zod or explicit checks; errors return JSON `{ error }` with proper status.
 - Don't add dependencies without asking. Don't touch `.env*`.
 - Small commits, conventional prefixes: feat:, fix:, chore:, docs:, test:, refactor:. Write the title and body in English.
-- Before saying a task is done: `npm run build && npm run lint`. If prompt/knowledge changed: `npm run eval`.
+- Before saying a task is done: `npm run lint && npm run typecheck && npm test && npm run build`. If prompt/knowledge changed: `npm run eval`.
+- A new validation rule or bug fix in `app/` or `lib/` comes with a unit test; a new bot behaviour comes with an eval case.
 - Prefer editing existing files over creating new ones. No barrel files. No classes where functions suffice.
 
 ## AI SDK gotchas (verified in this repo: ai 7, @ai-sdk/react 4, zod 4, Next 16)
