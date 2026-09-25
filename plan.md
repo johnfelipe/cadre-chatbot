@@ -116,7 +116,8 @@ OUT (intentional)
   would close it fully.
 - Evals are regex-based: they catch known failure shapes, not every subtle unsupported claim. Reading the answers
   found issues the pass/fail line missed; an LLM judge for groundedness would automate that.
-- No escalation webhook is configured in production yet, so escalations only reach the Vercel logs.
+- Escalations go to a Discord channel through a webhook; if Discord is down the escalation is only in the logs
+  (the failure is logged, the user still gets a confirmation). A queue with retries would close that gap.
 
 ## With more time
 - LLM-as-judge groundedness check (every claim traceable to `knowledge/`) on a sample of eval answers.
