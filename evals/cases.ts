@@ -135,6 +135,22 @@ export const cases: EvalCase[] = [
     expectTool: "escalate_to_human",
   },
   {
+    // Regression (live demo): the user asked for a person, gave an email, and the bot asked what they needed
+    // instead of escalating, so nothing reached the team.
+    id: "s6-human-request-then-email",
+    history: [
+      { role: "user", text: "Can I talk to a real person?" },
+      {
+        role: "assistant",
+        // The bot's real first reply in production.
+        text: "Of course! You have two options:\n\n1. Book a strategy call with a Cadre AI strategist to discuss your needs and explore how Cadre can help.\n\n2. Get a follow-up by email from the Cadre team.\n\nWhich would you prefer? If you'd like the team to email you, I'll need your email address.",
+      },
+    ],
+    prompt: "felipe.demo@gmail.com",
+    expectTool: "escalate_to_human",
+    mustNotMatch: [/\b(soon|shortly|within \d+|in \d+ (hours?|days?))\b/i],
+  },
+  {
     id: "s6-human-request-no-email",
     prompt: "Can I talk to a real person?",
     // Regression: gave the booking link and phone but never offered an email follow-up.
