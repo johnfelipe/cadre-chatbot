@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      run_evals:
+        description: "Also run the behavioural evals (real model calls, spends budget)"
+        type: boolean
+        default: false
+      eval_url:
+        description: "Deployment to evaluate"
+        default: "https://cadre-chatbot-ebon.vercel.app"
+      cases:
+        description: "Case-id prefixes, space-separated (empty = all)"
+        default: ""
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  evals:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_evals
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Inputs go through env, not ${{ }} in the script, so they can't inject shell commands.
+      - run: npm run eval -- $CASES
+        env:
+          EVAL_URL: ${{ inputs.eval_url }}
+          CASES: ${{ inputs.cases }}
