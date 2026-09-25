@@ -42,6 +42,7 @@ OUT (intentional)
       Added 35 edge cases (82 total): grounding under pressure, hidden and indirect injection, data leaks, tool misuse,
       languages, format, API contract. The 2 API cases passed first time (role enum and per-message length cap already
       in place); 36/38 on the rest, both failures were rules that matched negated wording (fixed), 2/2 on re-run.
+      After removing "get an accurate quote" (prompt rule + suggested wording in pricing.md): **82/82 in 462 s**.
 - [x] 5. UI polish: starter questions, tool result cards, error/retry states, bold and clickable links, mobile pass
       (390×844: no horizontal overflow, fixed header and input, long URLs wrap, 44px touch targets)
 - [ ] 6. README, update CLAUDE.md mistakes log, zip (with .git, without node_modules/.next)
