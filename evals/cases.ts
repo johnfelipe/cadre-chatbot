@@ -299,7 +299,8 @@ export const cases: EvalCase[] = [
   {
     id: "input-vague-how-much",
     prompt: "how much?",
-    mustMatch: [CLARIFIES],
+    // Either ask which service, or take the likely meaning (price) and say it isn't published; both end on a question.
+    mustMatch: [new RegExp(`${CLARIFIES.source}|${NOT_KNOWN.source}`, "i"), /\?/],
     mustNotMatch: [/\$\s?\d/, ...PROMISES_DELIVERABLE],
   },
   {
