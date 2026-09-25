@@ -39,6 +39,9 @@ OUT (intentional)
       Added 25 out-of-scope, security, unusual-input and multi-turn cases (47 total): 46/47, all new cases pass.
       s3-portal is flaky: the model sometimes adds "support will help you log in"; with a suggested wording it passes 2 of 3 runs.
       With temperature 0.2: 45/47, both failures were rules too strict (fixed); s3-portal passed 3 of 3 with the same answer.
+      Added 35 edge cases (82 total): grounding under pressure, hidden and indirect injection, data leaks, tool misuse,
+      languages, format, API contract. The 2 API cases passed first time (role enum and per-message length cap already
+      in place); 36/38 on the rest, both failures were rules that matched negated wording (fixed), 2/2 on re-run.
 - [x] 5. UI polish: starter questions, tool result cards, error/retry states, bold and clickable links, mobile pass
       (390×844: no horizontal overflow, fixed header and input, long URLs wrap, 44px touch targets)
 - [ ] 6. README, update CLAUDE.md mistakes log, zip (with .git, without node_modules/.next)
