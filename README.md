@@ -44,13 +44,13 @@ flowchart LR
 
 | Layer | What | Cost |
 |---|---|---|
-| Unit tests (`npm test`, Vitest) | 37 tests: every API rejection path, the params sent to the model, escalation payload and PII masking, rate limit, knowledge loading, XSS-safe rendering, the knowledge guard hook | Free, model mocked |
-| Behavioural evals (`npm run eval`) | 82 cases against the deployed bot: the 6 scenarios, knowledge gaps, false premises, pushback and poisoned history, injection (fake system tags, base64, zero-width, translation), data leaks, tool misuse, languages, API contract | Real model calls |
+| Unit tests (`npm test`, Vitest) | 39 tests: every API rejection path, the params sent to the model, escalation payload and PII masking, rate limit, knowledge loading, XSS-safe rendering, the knowledge guard hook | Free, model mocked |
+| Behavioural evals (`npm run eval`) | 83 cases against the deployed bot: the 6 scenarios, knowledge gaps, false premises, pushback and poisoned history, injection (fake system tags, base64, zero-width, translation), data leaks, tool misuse, languages, API contract | Real model calls |
 | CI (GitHub Actions) | lint, typecheck, unit tests and build on every push; evals on manual dispatch only | Free / opt-in |
 
-Latest full eval run on production: **81/82**. The miss was "how much?": the bot took the likely meaning (price)
-instead of asking which service, and the case now accepts either. Every failure found along the way is a regression
-case in `evals/cases.ts`, and each fix is described in the commit that made it.
+Latest full eval run on production: **83/83**. Every failure found along the way, including one seen live in the
+browser (the bot asked a follow-up question instead of escalating), is a regression case in `evals/cases.ts`, and
+each fix is described in the commit that made it.
 
 ## Run locally
 Requires Node 22.18+ (the eval runner uses Node's built-in TypeScript support).

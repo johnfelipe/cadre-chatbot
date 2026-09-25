@@ -119,6 +119,9 @@ code quality and verification 15%, communication 10%. "3 working features > 8 br
   The bot kept promising ("they'll get you sorted") until the knowledge file was fixed. When a rule changes, grep knowledge/ for "How to answer" lines that contradict it.
 - Budget estimates counted one model call per turn, but a turn that calls a tool runs two steps and sends the ~7k-token
   prefix twice (14.5k input measured). Found only once per-request usage logging existed: measure, don't estimate.
+- The escalation evals always had the user's question in the history, so they missed the plain "talk to a person" +
+  email flow, where the prompt's "make sure you know their question" made the bot ask again instead of escalating.
+  Found by trying the demo by hand. Eval histories should use the bot's real replies, not idealised ones.
 - The first "asks for the user's email" eval regex also matched the bot giving out Cadre's own address ("email hello@…"),
   and the access-promise guard missed the bot's real wording. Caught by the code-reviewer subagent; eval regexes are now
   tested in node against the real answer and near-misses before committing.

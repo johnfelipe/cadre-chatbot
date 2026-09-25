@@ -45,10 +45,13 @@ OUT (intentional)
       After removing "get an accurate quote" (prompt rule + suggested wording in pricing.md): **82/82 in 462 s**.
       After per-request tools, prompt caching and API hardening: 81/82. "how much?" answered the likely meaning
       (price not published, then a question) instead of asking which service; the case now accepts either.
+      Live demo bug: after "Can I talk to a real person?" + an email, the bot sometimes asked what the user needed
+      instead of escalating. Prompt fixed, regression case added (3/3), full suite **83/83 in 489 s**.
 - [x] 5. UI polish: starter questions, tool result cards, error/retry states, bold and clickable links, mobile pass
       (390×844: no horizontal overflow, fixed header and input, long URLs wrap, 44px touch targets)
 - [ ] 6. README, update CLAUDE.md mistakes log, zip (with .git, without node_modules/.next).
-      README and mistakes log done; unit tests, CI and Claude Code hooks added. Left: webhook URL, key switch, zip.
+      README and mistakes log done; unit tests, CI and Claude Code hooks added. Discord webhook live (2026-09-25:
+      a production escalation logged with a masked email and no webhook error). Left: key switch, zip.
       Before submitting (day 4, not the review day: reviewers test the live URL in between):
       switch `OPENROUTER_API_KEY` in Vercel back to the challenge key, **redeploy** (env changes only apply to
       new deployments), then smoke-test booking and escalation on the live URL.
