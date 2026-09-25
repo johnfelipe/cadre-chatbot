@@ -28,6 +28,23 @@ describe("maskEmail", () => {
   });
 });
 
+describe("webhookPayload", () => {
+  it("puts the question, conversation and last turns in the chat message", async () => {
+    const { webhookPayload } = await load();
+    const payload = webhookPayload({ ...input, ...context, id: "e1", createdAt: "2026-09-25T00:00:00Z" });
+    expect(payload.content).toContain("Question: Can Cadre sign our NDA?");
+    expect(payload.content).toContain("Conversation: chat-123");
+    expect(payload.content).toContain("> user: Can Cadre sign our NDA?");
+  });
+
+  it("stays within Discord's 2000-character message limit", async () => {
+    const { webhookPayload } = await load();
+    const transcript = Array.from({ length: 6 }, () => ({ role: "user" as const, text: "x".repeat(500) }));
+    const payload = webhookPayload({ ...input, transcript, id: "e1", createdAt: "2026-09-25T00:00:00Z" });
+    expect(payload.content.length).toBeLessThanOrEqual(2000);
+  });
+});
+
 describe("recordEscalation", () => {
   it("without a webhook, logs the full record as the only copy", async () => {
     const { recordEscalation } = await load();

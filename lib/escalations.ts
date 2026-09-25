@@ -32,11 +32,23 @@ export function maskEmail(email: string): string {
   return `${local.slice(0, 1)}***@${domain}`;
 }
 
+// Discord rejects messages over 2000 characters.
+const CHAT_MESSAGE_LIMIT = 2000;
+
 export function webhookPayload(escalation: Escalation) {
   const who = escalation.name ? `${escalation.name} <${escalation.email}>` : escalation.email;
-  const summary = `New chatbot escalation (${escalation.reason}) from ${who}: ${escalation.question}`;
+  const lines = [
+    `**New chatbot escalation** (${escalation.reason}) from ${who}`,
+    `Question: ${escalation.question}`,
+    escalation.conversationId ? `Conversation: ${escalation.conversationId}` : "",
+    ...(escalation.transcript?.length
+      ? ["Last turns:", ...escalation.transcript.map((t) => `> ${t.role}: ${t.text.replace(/\s+/g, " ")}`)]
+      : []),
+  ].filter(Boolean);
+  let message = lines.join("\n");
+  if (message.length > CHAT_MESSAGE_LIMIT) message = `${message.slice(0, CHAT_MESSAGE_LIMIT - 1)}…`;
   // Slack reads `text`, Discord reads `content`; other receivers get the full record.
-  return { text: summary, content: summary, escalation };
+  return { text: message, content: message, escalation };
 }
 
 export async function recordEscalation(
