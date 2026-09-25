@@ -12,29 +12,55 @@ export const escalationInputSchema = z.object({
 
 export type EscalationInput = z.infer<typeof escalationInputSchema>;
 
-export type Escalation = EscalationInput & {
-  id: string;
-  createdAt: string;
+export type TranscriptTurn = { role: "user" | "assistant"; text: string };
+
+export type EscalationContext = {
+  conversationId?: string;
+  transcript?: TranscriptTurn[];
 };
+
+export type Escalation = EscalationInput &
+  EscalationContext & {
+    id: string;
+    createdAt: string;
+  };
 
 const WEBHOOK_TIMEOUT_MS = 3000;
 
-export async function recordEscalation(input: EscalationInput): Promise<Escalation> {
+export function maskEmail(email: string): string {
+  const [local = "", domain = ""] = email.split("@");
+  return `${local.slice(0, 1)}***@${domain}`;
+}
+
+export function webhookPayload(escalation: Escalation) {
+  const who = escalation.name ? `${escalation.name} <${escalation.email}>` : escalation.email;
+  const summary = `New chatbot escalation (${escalation.reason}) from ${who}: ${escalation.question}`;
+  // Slack reads `text`, Discord reads `content`; other receivers get the full record.
+  return { text: summary, content: summary, escalation };
+}
+
+export async function recordEscalation(
+  input: EscalationInput,
+  context: EscalationContext = {},
+): Promise<Escalation> {
   const escalation: Escalation = {
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
     ...input,
+    ...context,
   };
 
-  // Vercel logs are the system of record until a webhook is configured.
-  console.info("[escalation]", JSON.stringify(escalation));
+  const webhook = CONFIG.urls.escalationWebhook;
+  // Without a webhook the log is the only record, so it keeps the full email.
+  const logged = webhook ? { ...escalation, email: maskEmail(escalation.email) } : escalation;
+  console.info("[escalation]", JSON.stringify(logged));
 
-  if (CONFIG.urls.escalationWebhook) {
+  if (webhook) {
     try {
-      const res = await fetch(CONFIG.urls.escalationWebhook, {
+      const res = await fetch(webhook, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify(escalation),
+        body: JSON.stringify(webhookPayload(escalation)),
         signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
       });
       if (!res.ok) console.error("[escalation] webhook failed", escalation.id, res.status);

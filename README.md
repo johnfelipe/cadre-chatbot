@@ -25,7 +25,7 @@ npm install
 #   OPENROUTER_API_KEY=...          required
 #   OPENROUTER_MODEL=...            optional, default anthropic/claude-haiku-4.5
 #   BOOKING_URL=...                 optional, overrides https://cadreai.com/contact
-#   ESCALATION_WEBHOOK_URL=...      optional, receives escalations as JSON
+#   ESCALATION_WEBHOOK_URL=...      optional, Slack/Discord incoming webhook for escalations
 npm run dev                          # http://localhost:3000
 ```
 

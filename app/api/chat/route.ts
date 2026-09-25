@@ -12,14 +12,19 @@ import { CONFIG } from "@/lib/config";
 import { loadKnowledge } from "@/lib/knowledge";
 import { buildSystemPrompt } from "@/lib/prompt";
 import { checkRateLimit, clientKey } from "@/lib/rate-limit";
-import { tools, type ChatMessage } from "@/lib/tools";
+import { buildTools, tools, type ChatMessage } from "@/lib/tools";
+import type { TranscriptTurn } from "@/lib/escalations";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
 const bodySchema = z.object({
+  id: z.string().max(100).optional(),
   messages: z.array(z.object({ role: z.enum(["user", "assistant"]) }).loose()).min(1),
 });
+
+const TRANSCRIPT_TURNS = 6;
+const TRANSCRIPT_TURN_CHARS = 500;
 
 function jsonError(status: number, error: string, headers?: HeadersInit) {
   return Response.json({ error }, { status, headers });
@@ -62,12 +67,13 @@ export async function POST(req: Request) {
     return jsonError(400, "The message can't be empty.");
   }
 
+  const requestTools = buildTools({ conversationId: body.data.id, transcript: transcriptOf(messages) });
   const openrouter = createOpenRouter({ apiKey });
   const result = streamText({
     model: openrouter(CONFIG.model),
     instructions: buildSystemPrompt(await loadKnowledge()),
-    messages: await convertToModelMessages(messages, { tools }),
-    tools,
+    messages: await convertToModelMessages(messages, { tools: requestTools }),
+    tools: requestTools,
     maxOutputTokens: CONFIG.limits.maxOutputTokens,
     temperature: CONFIG.temperature,
     stopWhen: isStepCount(CONFIG.limits.maxSteps),
@@ -88,4 +94,11 @@ function trimHistory(messages: ChatMessage[]): ChatMessage[] {
 
 function messageText(message: ChatMessage): string {
   return message.parts.map((part) => (part.type === "text" ? part.text : "")).join("");
+}
+
+function transcriptOf(messages: ChatMessage[]): TranscriptTurn[] {
+  return messages
+    .slice(-TRANSCRIPT_TURNS)
+    .map((m) => ({ role: m.role as TranscriptTurn["role"], text: messageText(m).slice(0, TRANSCRIPT_TURN_CHARS) }))
+    .filter((turn) => turn.text.trim());
 }

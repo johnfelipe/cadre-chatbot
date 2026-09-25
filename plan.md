@@ -56,8 +56,10 @@ OUT (intentional)
   429 (rate limited, with `retry-after`) or 500 (not configured).
 - Tools: `get_booking_link() → { url }` (cadreai.com/contact unless `BOOKING_URL` overrides it);
   `escalate_to_human({ email, name?, question, reason }) → { ok, id }`.
-- `Escalation = { id, createdAt, email, name?, question, reason }`, reason one of `user_requested_human`,
-  `unknown_answer`, `account_specific`, `other`. Stored as a JSON log line, optionally POSTed to a webhook. No database.
+- `Escalation = { id, createdAt, email, name?, question, reason, conversationId?, transcript? }`, reason one of
+  `user_requested_human`, `unknown_answer`, `account_specific`, `other`; `transcript` is the last 6 turns (500 chars each)
+  so the team has context. POSTed to `ESCALATION_WEBHOOK_URL` as `{ text, content, escalation }` (Slack reads `text`,
+  Discord `content`) and logged as JSON, with the email masked when a webhook exists. No database.
 - Conversation state lives in the browser; the server is stateless apart from the per-instance rate-limit map.
 
 ## Scaling path
