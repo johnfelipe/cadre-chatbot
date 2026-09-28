@@ -19,7 +19,10 @@ async function load(webhook?: string) {
   return import("@/lib/escalations");
 }
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
 
 describe("maskEmail", () => {
   it("keeps the first letter and the domain", async () => {
@@ -79,12 +82,72 @@ describe("recordEscalation", () => {
   });
 
   it("never throws when the webhook fails", async () => {
+    vi.useFakeTimers();
     const { recordEscalation } = await load("https://hooks.example/abc");
     vi.spyOn(console, "info").mockImplementation(() => {});
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
-    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
+    const fetchMock = vi.fn().mockRejectedValue(new Error("network down"));
+    vi.stubGlobal("fetch", fetchMock);
 
-    await expect(recordEscalation(input)).resolves.toMatchObject({ email: input.email });
-    expect(error).toHaveBeenCalled();
+    const result = recordEscalation(input);
+    await vi.advanceTimersByTimeAsync(500);
+
+    await expect(result).resolves.toMatchObject({ email: input.email });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(error).toHaveBeenCalledTimes(1);
+  });
+
+  it("retries once after 500 ms on a 5xx and succeeds", async () => {
+    vi.useFakeTimers();
+    const { recordEscalation } = await load("https://hooks.example/abc");
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 503 }))
+      .mockResolvedValueOnce(new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = recordEscalation(input);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(500);
+    await result;
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(error).not.toHaveBeenCalled();
+  });
+
+  it("does not retry on a 4xx", async () => {
+    vi.useFakeTimers();
+    const { recordEscalation } = await load("https://hooks.example/abc");
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 400 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = recordEscalation(input);
+    await vi.advanceTimersByTimeAsync(500);
+    await result;
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(error).toHaveBeenCalledWith("[escalation] webhook failed", expect.any(String), 400);
+  });
+
+  it("gives up and logs the error after two 5xx", async () => {
+    vi.useFakeTimers();
+    const { recordEscalation } = await load("https://hooks.example/abc");
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const fetchMock = vi.fn().mockImplementation(async () => new Response(null, { status: 502 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = recordEscalation(input);
+    await vi.advanceTimersByTimeAsync(500);
+
+    await expect(result).resolves.toMatchObject({ email: input.email });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(error).toHaveBeenCalledTimes(1);
+    expect(error).toHaveBeenCalledWith("[escalation] webhook failed", expect.any(String), 502);
   });
 });

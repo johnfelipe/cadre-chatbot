@@ -119,8 +119,9 @@ OUT (intentional)
   would close it fully.
 - Evals are regex-based: they catch known failure shapes, not every subtle unsupported claim. Reading the answers
   found issues the pass/fail line missed; an LLM judge for groundedness would automate that.
-- Escalations go to a Discord channel through a webhook; if Discord is down the escalation is only in the logs
-  (the failure is logged, the user still gets a confirmation). A queue with retries would close that gap.
+- Escalations go to a Discord channel through a webhook, retried once after 500 ms on a network error, timeout or
+  5xx (not on 4xx). If Discord is still down the escalation is only in the logs (the failure is logged, the user
+  still gets a confirmation). A queue with durable retries would close that gap.
 
 ## With more time
 - LLM-as-judge groundedness check (every claim traceable to `knowledge/`) on a sample of eval answers.

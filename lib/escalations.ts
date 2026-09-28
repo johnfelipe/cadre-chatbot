@@ -25,7 +25,10 @@ export type Escalation = EscalationInput &
     createdAt: string;
   };
 
-const WEBHOOK_TIMEOUT_MS = 3000;
+// Two attempts plus the wait stay under 4 s: 1700 + 500 + 1700.
+const WEBHOOK_TIMEOUT_MS = 1700;
+const WEBHOOK_RETRY_DELAY_MS = 500;
+const WEBHOOK_ATTEMPTS = 2;
 
 export function maskEmail(email: string): string {
   const [local = "", domain = ""] = email.split("@");
@@ -51,6 +54,32 @@ export function webhookPayload(escalation: Escalation) {
   return { text: message, content: message, escalation };
 }
 
+// Retries once on a network error, a timeout or a 5xx; a 4xx means the request itself is wrong. Never throws.
+async function postWebhook(url: string, escalation: Escalation): Promise<void> {
+  for (let attempt = 1; attempt <= WEBHOOK_ATTEMPTS; attempt++) {
+    const last = attempt === WEBHOOK_ATTEMPTS;
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(webhookPayload(escalation)),
+        signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
+      });
+      if (res.ok) return;
+      if (res.status < 500 || last) {
+        console.error("[escalation] webhook failed", escalation.id, res.status);
+        return;
+      }
+    } catch (error) {
+      if (last) {
+        console.error("[escalation] webhook error", escalation.id, error);
+        return;
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, WEBHOOK_RETRY_DELAY_MS));
+  }
+}
+
 export async function recordEscalation(
   input: EscalationInput,
   context: EscalationContext = {},
@@ -67,19 +96,7 @@ export async function recordEscalation(
   const logged = webhook ? { ...escalation, email: maskEmail(escalation.email) } : escalation;
   console.info("[escalation]", JSON.stringify(logged));
 
-  if (webhook) {
-    try {
-      const res = await fetch(webhook, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(webhookPayload(escalation)),
-        signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
-      });
-      if (!res.ok) console.error("[escalation] webhook failed", escalation.id, res.status);
-    } catch (error) {
-      console.error("[escalation] webhook error", escalation.id, error);
-    }
-  }
+  if (webhook) await postWebhook(webhook, escalation);
 
   return escalation;
 }
