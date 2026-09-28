@@ -39,6 +39,8 @@ flowchart LR
 - `lib/prompt.ts` holds behaviour rules only; `lib/config.ts` holds the model, limits and every URL, so the model
   can't invent links: it gets them from tools or knowledge.
 - Design decisions, scope cuts, budget (measured) and the scaling path are in [`plan.md`](plan.md).
+- A fuller architecture pack generated with ArcKit lives in [`docs/arc-kit/`](docs/arc-kit): principles,
+  requirements, stakeholders, a code audit and 20 diagrams (Mermaid sources as `.md`, rendered views as `.html`).
 
 ## Verification
 

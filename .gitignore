@@ -19,6 +19,10 @@ next-env.d.ts
 # personal Claude Code permissions
 .claude/settings.local.json
 
+# ArcKit generator state and visual-check screenshots (the .md and rendered .html docs are kept)
+docs/arc-kit/**/.archify/
+docs/arc-kit/**/*.png
+
 # os / editor
 .DS_Store
 Thumbs.db
