@@ -52,7 +52,9 @@ OUT (intentional)
 - [ ] 6. README, update CLAUDE.md mistakes log, zip (with .git, without node_modules/.next).
       README and mistakes log done; unit tests, CI and Claude Code hooks added. Discord webhook live (2026-09-25:
       a production escalation logged with a masked email and no webhook error). Confirmed in the Discord channel on
-      2026-09-28 (marker DISCORD-CHECK-1524, with question, conversation id and last turns). Left: key switch, zip.
+      2026-09-28 (marker DISCORD-CHECK-1524, with question, conversation id and last turns). Challenge key back in
+      production (2026-09-28 15:58 redeploy of `8b99694`); smoke test s2-booking and s6-escalation-with-email 2/2,
+      no webhook errors. Left: zip and upload.
       Before submitting (day 4, not the review day: reviewers test the live URL in between):
       switch `OPENROUTER_API_KEY` in Vercel back to the challenge key, **redeploy** (env changes only apply to
       new deployments), then smoke-test booking and escalation on the live URL.
