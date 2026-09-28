@@ -40,7 +40,8 @@ flowchart LR
   can't invent links: it gets them from tools or knowledge.
 - Design decisions, scope cuts, budget (measured) and the scaling path are in [`plan.md`](plan.md).
 - A fuller architecture pack generated with ArcKit lives in [`docs/arc-kit/`](docs/arc-kit): principles,
-  requirements, stakeholders, a code audit and 20 diagrams (Mermaid sources as `.md`, rendered views as `.html`).
+  requirements, stakeholders, 8 retrospective ADRs (`decisions/`), an architecture conformance assessment, a code
+  audit and 20 diagrams (Mermaid sources as `.md`, rendered views as `.html`).
 
 ## Verification
 
