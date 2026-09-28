@@ -120,8 +120,10 @@ OUT (intentional)
 - Evals are regex-based: they catch known failure shapes, not every subtle unsupported claim. Reading the answers
   found issues the pass/fail line missed; an LLM judge for groundedness would automate that.
 - Escalations go to a Discord channel through a webhook, retried once after 500 ms on a network error, timeout or
-  5xx (not on 4xx). If Discord is still down the escalation is only in the logs (the failure is logged, the user
-  still gets a confirmation). A queue with durable retries would close that gap.
+  429 or 5xx (not on other 4xx). If Discord is still down the escalation is only in the logs (the failure is
+  logged, the user still gets a confirmation). A queue with durable retries would close that gap.
+- A timeout on the first webhook attempt may mean Discord already accepted the message, so the retry can post a
+  duplicate. That is acceptable for escalations: a repeated message costs less than a lost one.
 
 ## With more time
 - LLM-as-judge groundedness check (every claim traceable to `knowledge/`) on a sample of eval answers.

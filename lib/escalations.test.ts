@@ -118,6 +118,25 @@ describe("recordEscalation", () => {
     expect(error).not.toHaveBeenCalled();
   });
 
+  it("retries once on a 429 rate limit", async () => {
+    vi.useFakeTimers();
+    const { recordEscalation } = await load("https://hooks.example/abc");
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(null, { status: 429 }))
+      .mockResolvedValueOnce(new Response(null, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = recordEscalation(input);
+    await vi.advanceTimersByTimeAsync(500);
+    await result;
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(error).not.toHaveBeenCalled();
+  });
+
   it("does not retry on a 4xx", async () => {
     vi.useFakeTimers();
     const { recordEscalation } = await load("https://hooks.example/abc");

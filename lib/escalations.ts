@@ -54,7 +54,8 @@ export function webhookPayload(escalation: Escalation) {
   return { text: message, content: message, escalation };
 }
 
-// Retries once on a network error, a timeout or a 5xx; a 4xx means the request itself is wrong. Never throws.
+// Retries once on a network error, a timeout, a 429 (rate limit) or a 5xx; any other 4xx means the request itself
+// is wrong. Never throws.
 async function postWebhook(url: string, escalation: Escalation): Promise<void> {
   for (let attempt = 1; attempt <= WEBHOOK_ATTEMPTS; attempt++) {
     const last = attempt === WEBHOOK_ATTEMPTS;
@@ -66,7 +67,7 @@ async function postWebhook(url: string, escalation: Escalation): Promise<void> {
         signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
       });
       if (res.ok) return;
-      if (res.status < 500 || last) {
+      if ((res.status < 500 && res.status !== 429) || last) {
         console.error("[escalation] webhook failed", escalation.id, res.status);
         return;
       }
