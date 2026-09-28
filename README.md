@@ -44,7 +44,7 @@ flowchart LR
 
 | Layer | What | Cost |
 |---|---|---|
-| Unit tests (`npm test`, Vitest) | 39 tests: every API rejection path, the params sent to the model, escalation payload and PII masking, rate limit, knowledge loading, XSS-safe rendering, the knowledge guard hook | Free, model mocked |
+| Unit tests (`npm test`, Vitest) | 43 tests: every API rejection path, the params sent to the model, escalation payload, PII masking and webhook retries, rate limit, knowledge loading, XSS-safe rendering, the knowledge guard hook | Free, model mocked |
 | Behavioural evals (`npm run eval`) | 83 cases against the deployed bot: the 6 scenarios, knowledge gaps, false premises, pushback and poisoned history, injection (fake system tags, base64, zero-width, translation), data leaks, tool misuse, languages, API contract | Real model calls |
 | CI (GitHub Actions) | lint, typecheck, unit tests and build on every push; evals on manual dispatch only | Free / opt-in |
 
@@ -90,6 +90,28 @@ pass/fail line. Claude Code and Cursor's agent were both used; commits made from
 - **Commands** (`.claude/commands/`): `/ship`, `/eval`, `/add-knowledge`, `/log-decision`.
 - **Hooks** (`.claude/hooks/`): the rules are enforced by the harness, not only written down. One blocks new facts in
   `knowledge/` that carry a number or URL without a source; another lints and typechecks every edited TypeScript file.
+
+### A recorded Claude Code session
+
+[`docs/claude-code/session-2026-09-28.md`](docs/claude-code/session-2026-09-28.md) is the exported transcript of one
+end-to-end task: closing the "escalation lost if Discord is down" limitation from `plan.md`.
+
+1. **Plan mode:** a tightly scoped prompt, the constraint that matters (two attempts must stay under ~4 s, so the
+   per-attempt timeout drops from 3000 to 1700 ms), and the plan reviewed before approving. The plan also caught that
+   an existing test would break once retries existed.
+2. **Implementation:** the `check-edit` hook linted and typechecked each edit, and the tests use fake timers.
+   Commit `5980503`.
+3. **Review:** the `code-reviewer` subagent ran on the commit. No must-fix items, but it flagged that a Discord/Slack
+   **429** is transient and wasn't retried. That was accepted as a separate commit, `414773c`, with a test, along with
+   a note in `plan.md` about possible duplicates after a timeout.
+4. **Shipping:** `/ship` ran the checks, had the reviewer scan the transcript for secrets, then committed and pushed
+   it (`cd8023d`).
+
+Not everything went smoothly. The first attempt died with an API stream timeout after 19 minutes of planning, and it
+was re-run with a shorter prompt on a faster model. User-level plugins (`arckit`, `security-guidance`) were firing
+Python hooks in this repo, so they were disabled for this project in the personal, git-ignored
+`.claude/settings.local.json`. Auto mode also blocked a command that tried to read `.env.local`, in line with the
+`deny` rules in `.claude/settings.json`.
 
 Examples of AI output that was caught and changed (full list in the `CLAUDE.md` mistakes log):
 - The first rewrite of the docs switched to `@ai-sdk/anthropic` + `ANTHROPIC_API_KEY`, breaking the brief's
